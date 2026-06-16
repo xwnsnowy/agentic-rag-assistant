@@ -28,6 +28,7 @@ class Result:
     vector_score: float | None = None  # cosine similarity (higher = closer)
     keyword_score: float | None = None  # ts_rank
     rrf_score: float | None = None
+    rerank_score: float | None = None  # set by the reranker (Cohere relevance)
 
     @property
     def citation(self) -> str:

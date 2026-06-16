@@ -28,6 +28,15 @@ class Settings(BaseSettings):
     # text-embedding-3-small returns 1536 dims. Must match the chunks.embedding column.
     embedding_dim: int = 1536
 
+    # --- Reranking (Cohere Rerank API) ---
+    cohere_api_key: str = ""
+    rerank_model: str = "rerank-v3.5"
+
+    # --- LLM (generation + LLM-as-judge) via OpenRouter ---
+    openrouter_api_key: str = ""
+    openrouter_base: str = "https://openrouter.ai/api/v1"
+    llm_model: str = "openai/gpt-4o-mini"
+
     # --- CORS: comma-separated list of allowed frontend origins ---
     # In prod, set to the Vercel domain. Locally we default to the Next.js dev server.
     cors_origins: str = "http://localhost:3000"
