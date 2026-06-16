@@ -43,7 +43,7 @@ layer. Do not collapse the Python layer into TS.
 - Agent orchestration: LangGraph (Python)
 - Frontend streaming: Vercel AI SDK
 
-## Build phases (current status: Phase 0 scaffolded — pending Neon DATABASE_URL to finish DB round-trip)
+## Build phases (current status: Phase 0 nearly done — DB round-trip works on Neon; only corpus download remains)
 
 - **Phase 0 — Foundation.** Scaffold `web/` and `ai/`, enable pgvector, create the `chunks`
   table, get one chunk inserted + cosine-similarity query working, and a Next.js -> FastAPI
