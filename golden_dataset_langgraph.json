@@ -5,19 +5,20 @@
     "note": "AI-library docs change fast and wrong answers look plausible — VERIFY every ground_truth against the pinned v1.0 docs, never from memory. Avoid deprecated idioms (e.g. set_entry_point); prefer current v1.0 patterns. Expand to 30-50 items. Keep ~40% easy / 40% medium / 20% hard, mix the 'type' field, and include 3-5 'negative' traps (questions the docs don't answer) to test that the system says 'not found' instead of hallucinating.",
     "schema": {
       "id": "định danh duy nhất",
-      "question": "câu hỏi người dùng",
+      "question": "user question (English, matches the English corpus)",
       "ground_truth": "câu trả lời tham chiếu (LLM-as-judge chấm faithfulness/relevancy). Với câu negative: đáp án đúng là hệ thống từ chối / nói không có trong tài liệu.",
       "expected_source_hint": "trang/section docs mà retrieval ĐÚNG cần lấy. null nếu là câu bẫy.",
       "type": "factual | how-to | conceptual | comparison | multi-hop | negative",
       "difficulty": "easy | medium | hard",
       "version_sensitive": "true nếu đáp án dễ đổi theo version LangGraph",
-      "expected_slugs": "corpus doc slug(s) a correct retrieval should surface; [] for negative traps"
+      "expected_slugs": "corpus doc slug(s) a correct retrieval should surface; [] for negative traps",
+      "question_vi": "original Vietnamese phrasing (provenance)"
     }
   },
   "items": [
     {
       "id": "gd-001",
-      "question": "StateGraph trong LangGraph là gì?",
+      "question": "What is StateGraph in LangGraph?",
       "ground_truth": "StateGraph là building block trung tâm của LangGraph: nó định nghĩa một đồ thị gồm các node (bước tính toán) nối với nhau bằng edge (luồng điều khiển), tất cả cùng đọc/ghi vào một object State chung. Sau khi định nghĩa xong, bạn compile nó thành một graph thực thi được.",
       "expected_source_hint": "Concepts > Low Level / Graphs (StateGraph)",
       "type": "conceptual",
@@ -25,11 +26,12 @@
       "version_sensitive": false,
       "expected_slugs": [
         "graph-api"
-      ]
+      ],
+      "question_vi": "StateGraph trong LangGraph là gì?"
     },
     {
       "id": "gd-002",
-      "question": "State trong LangGraph thường được định nghĩa bằng kiểu gì?",
+      "question": "What type is a LangGraph State typically defined as?",
       "ground_truth": "State thường được định nghĩa bằng một TypedDict hoặc một Pydantic BaseModel, mô tả cấu trúc dữ liệu chia sẻ mà các node đọc và cập nhật trong suốt quá trình chạy graph.",
       "expected_source_hint": "Concepts > Low Level (State schema)",
       "type": "factual",
@@ -37,11 +39,12 @@
       "version_sensitive": false,
       "expected_slugs": [
         "graph-api"
-      ]
+      ],
+      "question_vi": "State trong LangGraph thường được định nghĩa bằng kiểu gì?"
     },
     {
       "id": "gd-003",
-      "question": "Một node trong LangGraph nhận và trả về cái gì?",
+      "question": "What does a node in LangGraph receive and return?",
       "ground_truth": "Node là một hàm (hoặc runnable) nhận vào State hiện tại và trả về một dict chứa các cập nhật cho State. Các cập nhật đó được merge vào State chung (theo reducer của từng channel) thay vì thay thế toàn bộ State.",
       "expected_source_hint": "Concepts > Low Level (Nodes)",
       "type": "conceptual",
@@ -49,11 +52,12 @@
       "version_sensitive": false,
       "expected_slugs": [
         "graph-api"
-      ]
+      ],
+      "question_vi": "Một node trong LangGraph nhận và trả về cái gì?"
     },
     {
       "id": "gd-004",
-      "question": "Reducer trong State để làm gì, và add_messages là gì?",
+      "question": "What is a reducer in State for, and what is add_messages?",
       "ground_truth": "Reducer quy định cách một cập nhật được gộp vào channel tương ứng của State (ví dụ nối thêm vào danh sách thay vì ghi đè). add_messages là một reducer dựng sẵn cho danh sách message: nó nhận danh sách hiện tại cộng với message mới và trả về danh sách đã gộp. Thường khai báo qua Annotated, ví dụ messages: Annotated[list, add_messages].",
       "expected_source_hint": "Concepts > Low Level (Reducers); add_messages",
       "type": "conceptual",
@@ -61,11 +65,12 @@
       "version_sensitive": false,
       "expected_slugs": [
         "graph-api"
-      ]
+      ],
+      "question_vi": "Reducer trong State để làm gì, và add_messages là gì?"
     },
     {
       "id": "gd-005",
-      "question": "Conditional edge khác edge thường ở chỗ nào?",
+      "question": "How does a conditional edge differ from a normal edge?",
       "ground_truth": "Edge thường (add_edge) nối cố định từ node A sang node B. Conditional edge (add_conditional_edges) định tuyến động: một hàm routing nhận State và trả về tên node kế tiếp (hoặc danh sách node), cho phép graph rẽ nhánh theo điều kiện — ví dụ sau node LLM thì quyết định đi tới node tool hay kết thúc.",
       "expected_source_hint": "Concepts > Low Level (Edges / Conditional edges)",
       "type": "comparison",
@@ -73,11 +78,12 @@
       "version_sensitive": false,
       "expected_slugs": [
         "graph-api"
-      ]
+      ],
+      "question_vi": "Conditional edge khác edge thường ở chỗ nào?"
     },
     {
       "id": "gd-006",
-      "question": "START và END trong LangGraph là gì?",
+      "question": "What are START and END in LangGraph?",
       "ground_truth": "START và END là hai node ảo (sentinel). Bạn nối add_edge(START, \"ten_node\") để chỉ định node chạy đầu tiên, và nối một node tới END để đánh dấu điểm kết thúc luồng. Lưu ý: idiom cũ set_entry_point() đã bị deprecate, v1.0 dùng edge từ START.",
       "expected_source_hint": "Concepts > Low Level (START/END)",
       "type": "factual",
@@ -85,11 +91,12 @@
       "version_sensitive": true,
       "expected_slugs": [
         "graph-api"
-      ]
+      ],
+      "question_vi": "START và END trong LangGraph là gì?"
     },
     {
       "id": "gd-007",
-      "question": "Checkpointer (checkpointing) trong LangGraph dùng để làm gì?",
+      "question": "What is a checkpointer (checkpointing) used for in LangGraph?",
       "ground_truth": "Checkpointer lưu lại State của graph sau mỗi bước node, nhờ đó có persistence: memory đa lượt (nhớ hội thoại qua nhiều lần invoke), khả năng phục hồi khi lỗi, và human-in-the-loop. Khi compile graph bạn truyền checkpointer (ví dụ MemorySaver cho in-memory, hoặc bản lưu Postgres/Sqlite cho bền vững).",
       "expected_source_hint": "Concepts > Persistence (Checkpointers)",
       "type": "how-to",
@@ -98,11 +105,12 @@
       "expected_slugs": [
         "persistence",
         "add-memory"
-      ]
+      ],
+      "question_vi": "Checkpointer (checkpointing) trong LangGraph dùng để làm gì?"
     },
     {
       "id": "gd-008",
-      "question": "Khi đã bật checkpointer, làm sao tách các cuộc hội thoại khác nhau?",
+      "question": "Once a checkpointer is enabled, how do you separate different conversations?",
       "ground_truth": "Truyền một thread_id trong config khi gọi graph, dạng config={\"configurable\": {\"thread_id\": \"...\"}}. Mỗi thread_id là một luồng state riêng, nên các cuộc hội thoại khác nhau không lẫn lộn dù dùng chung graph và checkpointer.",
       "expected_source_hint": "Concepts > Persistence (Threads / thread_id)",
       "type": "how-to",
@@ -111,11 +119,12 @@
       "expected_slugs": [
         "persistence",
         "add-memory"
-      ]
+      ],
+      "question_vi": "Khi đã bật checkpointer, làm sao tách các cuộc hội thoại khác nhau?"
     },
     {
       "id": "gd-009",
-      "question": "create_react_agent dùng để làm gì và import từ đâu?",
+      "question": "What is create_react_agent used for and where is it imported from?",
       "ground_truth": "create_react_agent (trong langgraph.prebuilt) là helper dựng sẵn tạo một ReAct agent: bạn truyền model và danh sách tools (kèm prompt tùy chọn), nó trả về một graph đã compile gồm node LLM suy luận chọn tool và node thực thi tool, với conditional edge lặp lại tới khi LLM không cần gọi tool nữa. Dùng khi muốn agent ReAct nhanh mà không phải dựng graph thủ công.",
       "expected_source_hint": "Reference > langgraph.prebuilt > create_react_agent",
       "type": "how-to",
@@ -125,11 +134,12 @@
         "use-subgraphs",
         "graph-api"
       ],
-      "curation_note": "VERSION DRIFT: ground_truth references create_react_agent from langgraph.prebuilt, but v1.0 uses `from langchain.agents import create_agent`. ground_truth should be corrected."
+      "curation_note": "VERSION DRIFT: ground_truth references create_react_agent from langgraph.prebuilt, but v1.0 uses `from langchain.agents import create_agent`. ground_truth should be corrected.",
+      "question_vi": "create_react_agent dùng để làm gì và import từ đâu?"
     },
     {
       "id": "gd-010",
-      "question": "Tôi muốn một chatbot có thể gọi tool, nhớ được hội thoại qua nhiều lượt, và xử lý nhiều người dùng song song. Cần kết hợp những cơ chế nào của LangGraph?",
+      "question": "I want a chatbot that can call tools, remember the conversation across turns, and handle many users in parallel. Which LangGraph mechanisms must I combine?",
       "ground_truth": "Kết hợp: dùng StateGraph với State chứa danh sách messages (reducer add_messages) hoặc dùng create_react_agent để có sẵn vòng gọi tool; thêm checkpointer khi compile để có memory đa lượt và persistence; và truyền thread_id riêng cho mỗi người dùng/cuộc hội thoại trong config để các phiên không lẫn nhau. Đây là câu multi-hop vì cần ghép kiến thức từ State/messages, tool calling, persistence và threads.",
       "expected_source_hint": "Concepts > Low Level (messages); Prebuilt (create_react_agent); Persistence (checkpointer, threads)",
       "type": "multi-hop",
@@ -139,17 +149,19 @@
         "graph-api",
         "persistence",
         "add-memory"
-      ]
+      ],
+      "question_vi": "Tôi muốn một chatbot có thể gọi tool, nhớ được hội thoại qua nhiều lượt, và xử lý nhiều người dùng song song. Cần kết hợp những cơ chế nào của LangGraph?"
     },
     {
       "id": "gd-011",
-      "question": "LangGraph có cung cấp sẵn một vector database để lưu embeddings không?",
+      "question": "Does LangGraph provide a built-in vector database for storing embeddings?",
       "ground_truth": "Không. LangGraph là framework orchestration cho agent/workflow dạng graph; nó không phải vector database. Việc lưu trữ embeddings được làm bằng một vector store riêng (ví dụ pgvector, hoặc các tích hợp trong hệ sinh thái LangChain), không phải tính năng của bản thân LangGraph. Đáp án đúng cho hệ thống là nói tài liệu không mô tả điều này, không bịa ra một API.",
       "expected_source_hint": null,
       "type": "negative",
       "difficulty": "medium",
       "version_sensitive": false,
-      "expected_slugs": []
+      "expected_slugs": [],
+      "question_vi": "LangGraph có cung cấp sẵn một vector database để lưu embeddings không?"
     }
   ]
 }
