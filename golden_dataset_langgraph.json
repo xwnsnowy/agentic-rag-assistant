@@ -10,7 +10,8 @@
       "expected_source_hint": "trang/section docs mà retrieval ĐÚNG cần lấy. null nếu là câu bẫy.",
       "type": "factual | how-to | conceptual | comparison | multi-hop | negative",
       "difficulty": "easy | medium | hard",
-      "version_sensitive": "true nếu đáp án dễ đổi theo version LangGraph"
+      "version_sensitive": "true nếu đáp án dễ đổi theo version LangGraph",
+      "expected_slugs": "corpus doc slug(s) a correct retrieval should surface; [] for negative traps"
     }
   },
   "items": [
@@ -21,7 +22,10 @@
       "expected_source_hint": "Concepts > Low Level / Graphs (StateGraph)",
       "type": "conceptual",
       "difficulty": "easy",
-      "version_sensitive": false
+      "version_sensitive": false,
+      "expected_slugs": [
+        "graph-api"
+      ]
     },
     {
       "id": "gd-002",
@@ -30,7 +34,10 @@
       "expected_source_hint": "Concepts > Low Level (State schema)",
       "type": "factual",
       "difficulty": "easy",
-      "version_sensitive": false
+      "version_sensitive": false,
+      "expected_slugs": [
+        "graph-api"
+      ]
     },
     {
       "id": "gd-003",
@@ -39,7 +46,10 @@
       "expected_source_hint": "Concepts > Low Level (Nodes)",
       "type": "conceptual",
       "difficulty": "medium",
-      "version_sensitive": false
+      "version_sensitive": false,
+      "expected_slugs": [
+        "graph-api"
+      ]
     },
     {
       "id": "gd-004",
@@ -48,7 +58,10 @@
       "expected_source_hint": "Concepts > Low Level (Reducers); add_messages",
       "type": "conceptual",
       "difficulty": "medium",
-      "version_sensitive": false
+      "version_sensitive": false,
+      "expected_slugs": [
+        "graph-api"
+      ]
     },
     {
       "id": "gd-005",
@@ -57,7 +70,10 @@
       "expected_source_hint": "Concepts > Low Level (Edges / Conditional edges)",
       "type": "comparison",
       "difficulty": "medium",
-      "version_sensitive": false
+      "version_sensitive": false,
+      "expected_slugs": [
+        "graph-api"
+      ]
     },
     {
       "id": "gd-006",
@@ -66,7 +82,10 @@
       "expected_source_hint": "Concepts > Low Level (START/END)",
       "type": "factual",
       "difficulty": "medium",
-      "version_sensitive": true
+      "version_sensitive": true,
+      "expected_slugs": [
+        "graph-api"
+      ]
     },
     {
       "id": "gd-007",
@@ -75,7 +94,11 @@
       "expected_source_hint": "Concepts > Persistence (Checkpointers)",
       "type": "how-to",
       "difficulty": "hard",
-      "version_sensitive": false
+      "version_sensitive": false,
+      "expected_slugs": [
+        "persistence",
+        "add-memory"
+      ]
     },
     {
       "id": "gd-008",
@@ -84,7 +107,11 @@
       "expected_source_hint": "Concepts > Persistence (Threads / thread_id)",
       "type": "how-to",
       "difficulty": "hard",
-      "version_sensitive": true
+      "version_sensitive": true,
+      "expected_slugs": [
+        "persistence",
+        "add-memory"
+      ]
     },
     {
       "id": "gd-009",
@@ -93,7 +120,12 @@
       "expected_source_hint": "Reference > langgraph.prebuilt > create_react_agent",
       "type": "how-to",
       "difficulty": "medium",
-      "version_sensitive": true
+      "version_sensitive": true,
+      "expected_slugs": [
+        "use-subgraphs",
+        "graph-api"
+      ],
+      "curation_note": "VERSION DRIFT: ground_truth references create_react_agent from langgraph.prebuilt, but v1.0 uses `from langchain.agents import create_agent`. ground_truth should be corrected."
     },
     {
       "id": "gd-010",
@@ -102,7 +134,12 @@
       "expected_source_hint": "Concepts > Low Level (messages); Prebuilt (create_react_agent); Persistence (checkpointer, threads)",
       "type": "multi-hop",
       "difficulty": "hard",
-      "version_sensitive": false
+      "version_sensitive": false,
+      "expected_slugs": [
+        "graph-api",
+        "persistence",
+        "add-memory"
+      ]
     },
     {
       "id": "gd-011",
@@ -111,7 +148,8 @@
       "expected_source_hint": null,
       "type": "negative",
       "difficulty": "medium",
-      "version_sensitive": false
+      "version_sensitive": false,
+      "expected_slugs": []
     }
   ]
 }
