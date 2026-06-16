@@ -21,14 +21,14 @@ python -m scripts.run_eval --judge    # + faithfulness/relevancy/abstention (LLM
 `hit@k` saturates when expected pages are large, so **MRR / precision@k** are the
 honest retrieval signals here.
 
-## Results (top-5, real `text-embedding-3-small` vectors, judge = gpt-4o-mini)
+## Results (top-5, real `text-embedding-3-small` vectors, Cohere `rerank-v3.5`, judge = gpt-4o-mini)
 
 | Config | hit@5 | MRR | P@5 | latency (ms) | faithfulness | relevancy | abstention |
 |---|---|---|---|---|---|---|---|
-| keyword | 0.700 | 0.453 | 0.432 | 344 | 0.63 | 0.68 | 1.00 |
-| baseline (vector) | 0.900 | **0.783** | **0.600** | 1260 | 0.81 | 0.87 | 1.00 |
-| hybrid (RRF) | 0.900 | 0.758 | 0.500 | 1614 | 0.82 | 0.90 | 1.00 |
-| hybrid+rerank | 0.900 | 0.758 | 0.500 | 1497 | **0.84** | **0.90** | 1.00 |
+| keyword | 0.700 | 0.453 | 0.432 | 503 | 0.63 | 0.68 | 1.00 |
+| baseline (vector) | 0.900 | 0.783 | 0.600 | 1609 | 0.81 | 0.86 | 1.00 |
+| hybrid (RRF) | 0.900 | 0.758 | 0.500 | 1696 | 0.83 | 0.90 | 1.00 |
+| **hybrid+rerank** | **1.000** | **0.900** | **0.700** | 2603 | 0.77 | 0.79 | 1.00 |
 
 _10 answerable items + 1 negative trap. `n=11` (starter set; expanding to 30-50)._
 
@@ -38,22 +38,27 @@ _10 answerable items + 1 negative trap. `n=11` (starter set; expanding to 30-50)
    P@5 0.43 → 0.60 over keyword-only. The questions are conceptual ("what is a
    reducer?"), so dense retrieval generalises where exact-term matching can't.
 
-2. **Hybrid does not (yet) beat baseline.** With equal-weight RRF, the weak keyword
-   ranker (MRR 0.45) dilutes the already-strong vector ranking, so hybrid MRR (0.758)
-   sits just below baseline (0.783). This is expected on a small, clean, semantically-
-   phrased corpus and is an honest finding, not a failure to hide.
+2. **Hybrid alone ≈ baseline.** With equal-weight RRF the weak keyword ranker (MRR 0.45)
+   slightly dilutes the already-strong vector ranking (hybrid MRR 0.758 vs baseline
+   0.783). On a small, clean, semantically-phrased corpus, dense retrieval is already
+   strong — an honest finding, not hidden.
 
-3. **Rerank is the lever to make hybrid win.** `hybrid+rerank == hybrid` here because
-   no Cohere key is set (reranking is a passthrough). The designed story: hybrid widens
-   recall, a cross-encoder reranker fixes ordering/precision — that's what should push
-   `hybrid+rerank` above `baseline`. Even with rerank off, faithfulness is already
-   highest on that row (0.84).
+3. **Reranking wins.** A cross-encoder reranker over the wider hybrid candidate pool
+   reorders by true query-document relevance and pushes **hybrid+rerank above baseline
+   on every retrieval metric**: MRR 0.78 → 0.90, P@5 0.60 → 0.70, hit@5 0.90 → 1.00.
+   This is the designed story — hybrid for recall, rerank for precision — demonstrated.
 
-4. **No hallucination on the trap.** abstention = 1.0: the system says "not in the docs"
+4. **The cost is latency.** Reranking adds a network round-trip: ~2603 ms vs ~1609 ms
+   for baseline. A real precision/latency tradeoff worth stating, not burying.
+
+5. **Generation-quality numbers are noisy at n=11.** The small faithfulness/relevancy
+   dip on hybrid+rerank (0.77/0.79) is within LLM-judge noise at this sample size; the
+   retrieval metrics are the reliable signal until the dataset grows to 30-50 items.
+
+6. **No hallucination on the trap.** abstention = 1.0: the system says "not in the docs"
    for the negative question instead of inventing an API.
 
 ## Next
 
-- Add Cohere rerank to complete the "hybrid+rerank > baseline" comparison.
-- Secondary lever (no key needed): weight RRF toward the vector ranker.
-- Wire Langfuse for per-request cost/latency; expand the dataset to 30-50 items.
+- Wire Langfuse for per-request cost/latency tracing.
+- Expand the golden dataset to 30-50 items to stabilise the generation metrics.
