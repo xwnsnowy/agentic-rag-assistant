@@ -47,6 +47,31 @@ def judge_answer(question: str, ground_truth: str, answer: str, context_text: st
             {"role": "user", "content": user},
         ],
         name="eval.judge",
+        response_format={"type": "json_object"},  # guarantees valid JSON
     )
+    return _parse(text)
+
+
+_NUM_RE = {
+    "faithfulness": re.compile(r'"faithfulness"\s*:\s*([0-9.]+)'),
+    "answer_relevancy": re.compile(r'"answer_relevancy"\s*:\s*([0-9.]+)'),
+}
+_ABSTAIN_RE = re.compile(r'"abstained"\s*:\s*(true|false)')
+
+
+def _parse(text: str) -> dict:
+    """Parse the judge JSON; fall back to regex so one malformed reply can't
+    crash the whole eval run."""
     m = _JSON_RE.search(text)
-    return json.loads(m.group(0)) if m else {"faithfulness": None, "answer_relevancy": None}
+    if m:
+        try:
+            return json.loads(m.group(0))
+        except json.JSONDecodeError:
+            pass
+    out: dict = {}
+    for key, rx in _NUM_RE.items():
+        hit = rx.search(text)
+        out[key] = float(hit.group(1)) if hit else None
+    ab = _ABSTAIN_RE.search(text)
+    out["abstained"] = ab.group(1) == "true" if ab else False
+    return out

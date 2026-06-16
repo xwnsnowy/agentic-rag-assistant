@@ -162,6 +162,251 @@
       "version_sensitive": false,
       "expected_slugs": [],
       "question_vi": "LangGraph có cung cấp sẵn một vector database để lưu embeddings không?"
+    },
+    {
+      "id": "gd-012",
+      "question": "What stream modes does LangGraph support?",
+      "question_vi": "LangGraph hỗ trợ những stream mode nào?",
+      "ground_truth": "LangGraph hỗ trợ các stream mode: values, updates, messages, custom, debug, checkpoints, tasks (truyền qua tham số stream_mode). Có thể dùng nhiều mode cùng lúc.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "streaming"
+      ],
+      "type": "factual",
+      "difficulty": "easy",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-013",
+      "question": "How do you stream LLM tokens from a LangGraph graph?",
+      "question_vi": "Làm sao stream token LLM từ một graph LangGraph?",
+      "ground_truth": "Dùng stream_mode=\"messages\" khi gọi .stream(); nó phát các token LLM (kèm metadata) theo thời gian thực.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "streaming"
+      ],
+      "type": "how-to",
+      "difficulty": "easy",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-014",
+      "question": "How can a node stream arbitrary custom data to the client?",
+      "question_vi": "Một node phát dữ liệu custom tùy ý cho client bằng cách nào?",
+      "ground_truth": "Dùng stream_mode=\"custom\" và ghi dữ liệu qua stream writer bên trong node; hữu ích để stream dữ liệu từ bất kỳ API/LLM nào không theo interface chat model của LangChain.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "streaming"
+      ],
+      "type": "how-to",
+      "difficulty": "medium",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-015",
+      "question": "What is the difference between a checkpointer and a store in LangGraph?",
+      "question_vi": "Khác nhau giữa checkpointer và store trong LangGraph là gì?",
+      "ground_truth": "Checkpointer lưu state ngắn hạn theo từng thread (thread_id) — bộ nhớ trong một cuộc hội thoại. Store lưu dài hạn, dùng chung across threads — bộ nhớ lâu dài. Hai cơ chế khác nhau, bổ trợ nhau.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "persistence",
+        "add-memory"
+      ],
+      "type": "conceptual",
+      "difficulty": "easy",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-016",
+      "question": "Which checkpointer implementations does LangGraph provide?",
+      "question_vi": "LangGraph cung cấp các checkpointer nào?",
+      "ground_truth": "InMemorySaver cho dev/test (lưu trong RAM) và PostgresSaver cho production (lưu vào Postgres). Cài qua các package langgraph-checkpoint-*.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "persistence",
+        "add-memory"
+      ],
+      "type": "factual",
+      "difficulty": "easy",
+      "version_sensitive": true
+    },
+    {
+      "id": "gd-017",
+      "question": "How do you keep long conversations from exceeding the context window?",
+      "question_vi": "Làm sao để hội thoại dài không vượt context window?",
+      "ground_truth": "Quản lý short-term memory bằng cách trim messages (cắt bớt), delete messages (xóa), hoặc summarize messages (tóm tắt) trước khi đưa vào model.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "add-memory"
+      ],
+      "type": "how-to",
+      "difficulty": "medium",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-018",
+      "question": "How do you add long-term semantic-search memory in LangGraph?",
+      "question_vi": "Làm sao thêm bộ nhớ dài hạn tìm kiếm theo ngữ nghĩa?",
+      "ground_truth": "Dùng một store có cấu hình index (embeddings + số chiều dims) để lưu và truy hồi memory theo ngữ nghĩa; node truy cập store để đọc/ghi.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "add-memory"
+      ],
+      "type": "how-to",
+      "difficulty": "hard",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-019",
+      "question": "What is ToolNode in LangGraph?",
+      "question_vi": "ToolNode trong LangGraph là gì?",
+      "ground_truth": "ToolNode (langgraph.prebuilt) là node dựng sẵn thực thi các tool mà model yêu cầu gọi, trả ToolMessage về state. Dùng để gắn bước chạy tool vào graph.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "workflows-agents"
+      ],
+      "type": "factual",
+      "difficulty": "easy",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-020",
+      "question": "Which workflow/agent patterns does the LangGraph documentation describe?",
+      "question_vi": "Tài liệu LangGraph mô tả những pattern workflow/agent nào?",
+      "ground_truth": "Tài liệu mô tả: prompt chaining, parallelization, routing, orchestrator-worker, evaluator-optimizer, và agents. Đây là các pattern xây workflow/agent bằng LangGraph.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "workflows-agents"
+      ],
+      "type": "conceptual",
+      "difficulty": "easy",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-021",
+      "question": "What is the difference between a workflow and an agent in LangGraph?",
+      "question_vi": "Khác nhau giữa workflow và agent trong LangGraph?",
+      "ground_truth": "Workflow có luồng điều khiển định trước (các bước do người thiết kế quy định). Agent để LLM tự quyết luồng đi và tool nào gọi tại runtime. LangGraph dựng được cả hai.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "workflows-agents"
+      ],
+      "type": "comparison",
+      "difficulty": "medium",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-022",
+      "question": "What is a subgraph in LangGraph?",
+      "question_vi": "Subgraph trong LangGraph là gì?",
+      "ground_truth": "Subgraph là một graph được dùng như một node bên trong graph khác, để compose/đóng gói logic và tái sử dụng. Persistence áp dụng xuyên suốt subgraph.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "use-subgraphs"
+      ],
+      "type": "conceptual",
+      "difficulty": "easy",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-023",
+      "question": "What are the two ways to call a subgraph from a parent graph?",
+      "question_vi": "Hai cách gọi subgraph từ graph cha là gì?",
+      "ground_truth": "Thêm subgraph đã compile trực tiếp làm node khi cha và con chia sẻ key state; hoặc gọi subgraph bên trong một hàm node (transform state) khi schema khác nhau.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "use-subgraphs"
+      ],
+      "type": "how-to",
+      "difficulty": "hard",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-024",
+      "question": "How do you dynamically route to another node and update state from inside a node?",
+      "question_vi": "Làm sao từ trong một node vừa định tuyến động vừa cập nhật state?",
+      "ground_truth": "Trả về một Command(goto=..., update=...) từ node: goto chọn node tiếp theo, update ghi vào state. Cho phép điều khiển luồng động ngay trong node.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "graph-api",
+        "use-subgraphs"
+      ],
+      "type": "how-to",
+      "difficulty": "medium",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-025",
+      "question": "How does LangGraph prevent infinite loops in a graph run?",
+      "question_vi": "LangGraph chặn vòng lặp vô tận khi chạy graph bằng cách nào?",
+      "ground_truth": "Có recursion_limit (giới hạn số super-step) trong config khi .invoke()/.stream(); vượt giới hạn sẽ raise GraphRecursionError.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "graph-api"
+      ],
+      "type": "factual",
+      "difficulty": "medium",
+      "version_sensitive": true
+    },
+    {
+      "id": "gd-026",
+      "question": "How do you pause a graph for human-in-the-loop and then resume it?",
+      "question_vi": "Làm sao tạm dừng graph để con người can thiệp rồi chạy tiếp?",
+      "ground_truth": "Gọi interrupt() bên trong node để dừng và chờ input người dùng; sau đó resume bằng cách .stream/.invoke với Command(resume=...). Cần checkpointer để giữ state khi dừng.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "graph-api",
+        "use-subgraphs"
+      ],
+      "type": "how-to",
+      "difficulty": "hard",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-027",
+      "question": "How do you enable tracing/observability for a LangGraph app?",
+      "question_vi": "Làm sao bật tracing/observability cho app LangGraph?",
+      "ground_truth": "Bật LangSmith: đặt LANGSMITH_TRACING=true và LANGSMITH_API_KEY (tùy chọn LANGSMITH_PROJECT). Trace sẽ tự được ghi cho các lần chạy graph.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "observability"
+      ],
+      "type": "how-to",
+      "difficulty": "easy",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-028",
+      "question": "Does LangGraph include a built-in user authentication/login system?",
+      "question_vi": "LangGraph có sẵn hệ thống đăng nhập/xác thực người dùng không?",
+      "ground_truth": "Không. Tài liệu LangGraph không mô tả một hệ thống auth/login dựng sẵn — đó nằm ngoài phạm vi orchestration. Đáp án đúng là nói tài liệu không đề cập, không bịa API.",
+      "expected_source_hint": null,
+      "expected_slugs": [],
+      "type": "negative",
+      "difficulty": "medium",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-029",
+      "question": "Does LangGraph ship its own built-in LLM you can call without any external provider?",
+      "question_vi": "LangGraph có kèm sẵn một LLM riêng để gọi mà không cần provider ngoài không?",
+      "ground_truth": "Không. LangGraph không kèm model LLM riêng; bạn mang model của mình qua tích hợp LangChain (OpenAI, Anthropic, ...). Đáp án đúng là nói tài liệu không cung cấp điều này.",
+      "expected_source_hint": null,
+      "expected_slugs": [],
+      "type": "negative",
+      "difficulty": "medium",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-030",
+      "question": "Does LangGraph have a graph.deploy() call that deploys your graph to production in one line?",
+      "question_vi": "LangGraph có lệnh graph.deploy() triển khai graph lên production trong một dòng không?",
+      "ground_truth": "Không có API graph.deploy() như vậy trong tài liệu. Triển khai production làm qua LangGraph Platform / LangSmith (agent server), không phải một lệnh graph.deploy(). Đáp án đúng là nói tài liệu không mô tả method đó.",
+      "expected_source_hint": null,
+      "expected_slugs": [],
+      "type": "negative",
+      "difficulty": "hard",
+      "version_sensitive": false
     }
   ]
 }

@@ -2,48 +2,48 @@
   "k": 5,
   "embedding": "real",
   "judged": true,
-  "n_answerable": 10,
-  "n_negative": 1,
+  "n_answerable": 26,
+  "n_negative": 4,
   "reports": [
     {
       "name": "keyword",
-      "hit": 0.7,
-      "mrr": 0.4533333333333333,
-      "precision": 0.43166666666666664,
-      "latency_ms": 535.5526700001064,
-      "faithfulness": 0.63,
-      "relevancy": 0.6799999999999999,
-      "abstention": 1.0
+      "hit": 0.46153846153846156,
+      "mrr": 0.36666666666666664,
+      "precision": 0.35064102564102567,
+      "latency_ms": 441.39290384639304,
+      "faithfulness": 0.46923076923076923,
+      "relevancy": 0.49230769230769234,
+      "abstention": 0.5
     },
     {
       "name": "baseline",
-      "hit": 0.9,
-      "mrr": 0.7833333333333333,
-      "precision": 0.6,
-      "latency_ms": 1555.4721600001358,
-      "faithfulness": 0.8300000000000001,
-      "relevancy": 0.8699999999999999,
-      "abstention": 1.0
+      "hit": 0.9615384615384616,
+      "mrr": 0.8974358974358974,
+      "precision": 0.5846153846153846,
+      "latency_ms": 1382.3656653834264,
+      "faithfulness": 0.8576923076923078,
+      "relevancy": 0.8846153846153846,
+      "abstention": 0.25
     },
     {
       "name": "hybrid",
-      "hit": 0.9,
-      "mrr": 0.7583333333333333,
-      "precision": 0.5,
-      "latency_ms": 1657.2075200001564,
-      "faithfulness": 0.8400000000000001,
-      "relevancy": 0.9,
-      "abstention": 1.0
+      "hit": 0.9615384615384616,
+      "mrr": 0.8878205128205128,
+      "precision": 0.5615384615384615,
+      "latency_ms": 1576.1272307698584,
+      "faithfulness": 0.8615384615384615,
+      "relevancy": 0.9038461538461539,
+      "abstention": 0.25
     },
     {
       "name": "hybrid+rerank",
       "hit": 1.0,
-      "mrr": 0.9,
-      "precision": 0.7,
-      "latency_ms": 2575.776279999991,
-      "faithfulness": 0.77,
-      "relevancy": 0.79,
-      "abstention": 1.0
+      "mrr": 0.9230769230769231,
+      "precision": 0.7230769230769231,
+      "latency_ms": 2349.654711538908,
+      "faithfulness": 0.8538461538461538,
+      "relevancy": 0.8692307692307693,
+      "abstention": 0.5
     }
   ]
 }

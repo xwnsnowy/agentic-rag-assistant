@@ -11,10 +11,14 @@ truncated to top_k) so the pipeline still runs end-to-end without a key.
 
 from __future__ import annotations
 
+import time
+
 import httpx
 
 from app.config import get_settings
 from app.retrieval import Result
+
+_MAX_RETRIES = 6
 
 
 def rerank(query: str, results: list[Result], top_k: int = 5) -> list[Result]:
@@ -24,21 +28,39 @@ def rerank(query: str, results: list[Result], top_k: int = 5) -> list[Result]:
     if not settings.cohere_api_key:
         return results[:top_k]  # passthrough when no key
 
-    resp = httpx.post(
-        "https://api.cohere.com/v2/rerank",
-        headers={"Authorization": f"Bearer {settings.cohere_api_key}"},
-        json={
+    resp = _post_with_backoff(
+        settings,
+        {
             "model": settings.rerank_model,
             "query": query,
             "documents": [r.content for r in results],
             "top_n": top_k,
         },
-        timeout=60.0,
     )
-    resp.raise_for_status()
     out: list[Result] = []
     for item in resp.json()["results"]:
         r = results[item["index"]]
         r.rerank_score = float(item["relevance_score"])
         out.append(r)
     return out
+
+
+def _post_with_backoff(settings, payload: dict) -> httpx.Response:
+    """POST to Cohere, retrying on 429/5xx with backoff (free trial keys are
+    rate-limited to ~10 req/min)."""
+    for attempt in range(_MAX_RETRIES):
+        resp = httpx.post(
+            "https://api.cohere.com/v2/rerank",
+            headers={"Authorization": f"Bearer {settings.cohere_api_key}"},
+            json=payload,
+            timeout=60.0,
+        )
+        if resp.status_code == 429 or resp.status_code >= 500:
+            if attempt == _MAX_RETRIES - 1:
+                resp.raise_for_status()
+            wait = float(resp.headers.get("retry-after", 2 ** attempt))
+            time.sleep(min(wait, 30.0))
+            continue
+        resp.raise_for_status()
+        return resp
+    return resp  # unreachable, keeps type-checkers happy

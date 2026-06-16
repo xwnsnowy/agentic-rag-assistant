@@ -26,10 +26,14 @@ def _client():
     return OpenAI(api_key=settings.openrouter_api_key, base_url=settings.openrouter_base)
 
 
-def chat(messages: list[dict], *, name: str, temperature: float = 0.0) -> str:
-    """Run a chat completion and return the assistant text."""
+def chat(messages: list[dict], *, name: str, temperature: float = 0.0, **extra) -> str:
+    """Run a chat completion and return the assistant text.
+
+    Extra kwargs (e.g. response_format={"type": "json_object"}) pass through to
+    the OpenAI API.
+    """
     settings = get_settings()
-    kwargs = {"model": settings.llm_model, "messages": messages, "temperature": temperature}
+    kwargs = {"model": settings.llm_model, "messages": messages, "temperature": temperature, **extra}
     if obs.init():
         kwargs["name"] = name  # the drop-in accepts a Langfuse observation name
     resp = _client().chat.completions.create(**kwargs)
