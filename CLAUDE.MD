@@ -43,7 +43,7 @@ layer. Do not collapse the Python layer into TS.
 - Agent orchestration: LangGraph (Python)
 - Frontend streaming: Vercel AI SDK
 
-## Build phases (current status: Phase 0 nearly done — DB round-trip works on Neon; only corpus download remains)
+## Build phases (current status: Phase 0 COMPLETE — Neon DB round-trip works; LangGraph v1.0 corpus downloaded (12 docs). Next: Phase 1)
 
 - **Phase 0 — Foundation.** Scaffold `web/` and `ai/`, enable pgvector, create the `chunks`
   table, get one chunk inserted + cosine-similarity query working, and a Next.js -> FastAPI
@@ -92,8 +92,10 @@ docker-compose, or containers anywhere — not for local dev, not for deployment
 lightweight.
 
 - Run `web/` with `pnpm dev` (use **pnpm**, not npm); run `ai/` with `uvicorn` (a local Python venv, not a container).
-- **SSL note (this machine):** Node/pnpm hit `UNABLE_TO_VERIFY_LEAF_SIGNATURE` against npm registry.
-  Prefix node/pnpm commands with `NODE_OPTIONS=--use-system-ca` (e.g. `NODE_OPTIONS=--use-system-ca pnpm install`).
+- **SSL note (this machine has a corporate/local CA):**
+  - Node/pnpm: prefix with `NODE_OPTIONS=--use-system-ca` (e.g. `NODE_OPTIONS=--use-system-ca pnpm install`).
+  - Python: standard CA verification fails too. We depend on `truststore` and call
+    `truststore.inject_into_ssl()` (auto-run in `ai/app/__init__.py`) to use the OS trust store.
 - For the database, do NOT install or run Postgres locally. Use **Neon**: create a separate
   dev branch/database in Neon and point local `DATABASE_URL` at it. Same managed Postgres +
   pgvector for both local and production, just different branches.
@@ -112,6 +114,7 @@ is the first place to look for how to run anything.
 - ai dev: `cd ai && uvicorn app.main:app --reload --port 8000` (note: module is `app.main`)
 - db migrate: `cd ai && python -m scripts.init_db` (pgvector ext + documents + chunks)
 - db seed/DoD: `cd ai && python -m scripts.seed_chunk` (insert 1 chunk + cosine query)
+- fetch corpus: `cd ai && python -m scripts.fetch_corpus` (LangGraph v1.0 docs -> data/raw/ + manifest.json; pinned tag 1.0.10)
 - eval: _(Phase 1 — TODO: command to run the eval harness over the golden dataset)_
 - lint/format: _(TODO once configured)_
 

@@ -4,3 +4,7 @@ __pycache__/
 .env
 .env*.local
 .pytest_cache/
+
+# Raw downloaded corpus (reproducible via scripts/fetch_corpus.py).
+# manifest.json IS committed for provenance.
+data/raw/

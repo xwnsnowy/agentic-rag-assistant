@@ -1,0 +1,119 @@
+{
+  "corpus": "LangGraph documentation",
+  "docs_version": "1.0.10",
+  "source_index": "https://raw.githubusercontent.com/langchain-ai/langgraph/1.0.10/docs/llms.txt",
+  "fetched_at": "2026-06-16T04:58:56.580955+00:00",
+  "doc_count": 12,
+  "total_bytes": 332458,
+  "files": [
+    {
+      "title": "LangGraph Overview",
+      "slug": "overview",
+      "url": "https://docs.langchain.com/oss/python/langgraph/overview",
+      "md_url": "https://docs.langchain.com/oss/python/langgraph/overview.md",
+      "path": "data\\raw\\overview.md",
+      "bytes": 7582
+    },
+    {
+      "title": "Graph API",
+      "slug": "graph-api",
+      "url": "https://docs.langchain.com/oss/python/langgraph/graph-api",
+      "md_url": "https://docs.langchain.com/oss/python/langgraph/graph-api.md",
+      "path": "data\\raw\\graph-api.md",
+      "bytes": 49906
+    },
+    {
+      "title": "Streaming",
+      "slug": "streaming",
+      "url": "https://docs.langchain.com/oss/python/langgraph/streaming",
+      "md_url": "https://docs.langchain.com/oss/python/langgraph/streaming.md",
+      "path": "data\\raw\\streaming.md",
+      "bytes": 46117
+    },
+    {
+      "title": "Persistence",
+      "slug": "persistence",
+      "url": "https://docs.langchain.com/oss/python/langgraph/persistence",
+      "md_url": "https://docs.langchain.com/oss/python/langgraph/persistence.md",
+      "path": "data\\raw\\persistence.md",
+      "bytes": 4100
+    },
+    {
+      "title": "Add Memory",
+      "slug": "add-memory",
+      "url": "https://docs.langchain.com/oss/python/langgraph/add-memory",
+      "md_url": "https://docs.langchain.com/oss/python/langgraph/add-memory.md",
+      "path": "data\\raw\\add-memory.md",
+      "bytes": 72724
+    },
+    {
+      "title": "Workflows & Agents",
+      "slug": "workflows-agents",
+      "url": "https://docs.langchain.com/oss/python/langgraph/workflows-agents",
+      "md_url": "https://docs.langchain.com/oss/python/langgraph/workflows-agents.md",
+      "path": "data\\raw\\workflows-agents.md",
+      "bytes": 37483
+    },
+    {
+      "title": "Use Subgraphs",
+      "slug": "use-subgraphs",
+      "url": "https://docs.langchain.com/oss/python/langgraph/use-subgraphs",
+      "md_url": "https://docs.langchain.com/oss/python/langgraph/use-subgraphs.md",
+      "path": "data\\raw\\use-subgraphs.md",
+      "bytes": 40424
+    },
+    {
+      "title": "Observability",
+      "slug": "observability",
+      "url": "https://docs.langchain.com/oss/python/langgraph/observability",
+      "md_url": "https://docs.langchain.com/oss/python/langgraph/observability.md",
+      "path": "data\\raw\\observability.md",
+      "bytes": 5785
+    },
+    {
+      "title": "Common Errors",
+      "slug": "common-errors",
+      "url": "https://docs.langchain.com/oss/python/langgraph/common-errors",
+      "md_url": "https://docs.langchain.com/oss/python/langgraph/common-errors.md",
+      "path": "data\\raw\\common-errors.md",
+      "bytes": 2407
+    },
+    {
+      "title": "Agentic RAG",
+      "slug": "agentic-rag",
+      "url": "https://docs.langchain.com/oss/python/langgraph/agentic-rag",
+      "md_url": "https://docs.langchain.com/oss/python/langgraph/agentic-rag.md",
+      "path": "data\\raw\\agentic-rag.md",
+      "bytes": 22035
+    },
+    {
+      "title": "SQL Agent",
+      "slug": "sql-agent",
+      "url": "https://docs.langchain.com/oss/python/langgraph/sql-agent",
+      "md_url": "https://docs.langchain.com/oss/python/langgraph/sql-agent.md",
+      "path": "data\\raw\\sql-agent.md",
+      "bytes": 33097
+    },
+    {
+      "title": "LangSmith documentation",
+      "slug": "agent-server",
+      "url": "https://docs.langchain.com/langsmith/agent-server",
+      "md_url": "https://docs.langchain.com/langsmith/agent-server.md",
+      "path": "data\\raw\\agent-server.md",
+      "bytes": 10798
+    }
+  ],
+  "skipped": [
+    {
+      "title": "API Reference",
+      "url": "https://reference.langchain.com/python/langgraph/",
+      "reason": "external host (not fetched)"
+    },
+    {
+      "title": "Why LangGraph?",
+      "url": "https://docs.langchain.com/oss/python/langgraph/why-langgraph",
+      "md_url": "https://docs.langchain.com/oss/python/langgraph/why-langgraph.md",
+      "reason": "HTTP 404"
+    }
+  ]
+}

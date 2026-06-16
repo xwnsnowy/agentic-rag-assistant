@@ -13,3 +13,6 @@ psycopg[binary]>=3.2
 
 # HTTP client for the embeddings API (OpenAI-compatible)
 httpx>=0.28
+
+# Use the OS trust store for TLS (corporate/local CA on this machine)
+truststore>=0.10
