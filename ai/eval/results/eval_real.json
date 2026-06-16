@@ -1,0 +1,49 @@
+{
+  "k": 5,
+  "embedding": "real",
+  "judged": true,
+  "n_answerable": 10,
+  "n_negative": 1,
+  "reports": [
+    {
+      "name": "keyword",
+      "hit": 0.7,
+      "mrr": 0.4533333333333333,
+      "precision": 0.43166666666666664,
+      "latency_ms": 343.99494000062987,
+      "faithfulness": 0.63,
+      "relevancy": 0.6799999999999999,
+      "abstention": 1.0
+    },
+    {
+      "name": "baseline",
+      "hit": 0.9,
+      "mrr": 0.7833333333333333,
+      "precision": 0.6,
+      "latency_ms": 1259.532240000408,
+      "faithfulness": 0.8099999999999999,
+      "relevancy": 0.8699999999999999,
+      "abstention": 1.0
+    },
+    {
+      "name": "hybrid",
+      "hit": 0.9,
+      "mrr": 0.7583333333333333,
+      "precision": 0.5,
+      "latency_ms": 1613.8613600000099,
+      "faithfulness": 0.82,
+      "relevancy": 0.9,
+      "abstention": 1.0
+    },
+    {
+      "name": "hybrid+rerank",
+      "hit": 0.9,
+      "mrr": 0.7583333333333333,
+      "precision": 0.5,
+      "latency_ms": 1497.2003400001995,
+      "faithfulness": 0.8400000000000001,
+      "relevancy": 0.9,
+      "abstention": 1.0
+    }
+  ]
+}
