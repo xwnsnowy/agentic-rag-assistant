@@ -37,6 +37,11 @@ class Settings(BaseSettings):
     openrouter_base: str = "https://openrouter.ai/api/v1"
     llm_model: str = "openai/gpt-4o-mini"
 
+    # --- Observability (Langfuse). Empty keys = tracing disabled (no-op). ---
+    langfuse_public_key: str = ""
+    langfuse_secret_key: str = ""
+    langfuse_host: str = "https://cloud.langfuse.com"
+
     # --- CORS: comma-separated list of allowed frontend origins ---
     # In prod, set to the Vercel domain. Locally we default to the Next.js dev server.
     cors_origins: str = "http://localhost:3000"

@@ -15,9 +15,8 @@ from __future__ import annotations
 import json
 import re
 
-import httpx
-
 from app.config import get_settings
+from app.llm import chat
 
 _JSON_RE = re.compile(r"\{.*\}", re.DOTALL)
 
@@ -42,20 +41,12 @@ def judge_answer(question: str, ground_truth: str, answer: str, context_text: st
         f"QUESTION:\n{question}\n\nCONTEXT:\n{context_text}\n\n"
         f"GROUND_TRUTH:\n{ground_truth}\n\nANSWER:\n{answer}"
     )
-    resp = httpx.post(
-        f"{settings.openrouter_base}/chat/completions",
-        headers={"Authorization": f"Bearer {settings.openrouter_api_key}"},
-        json={
-            "model": settings.llm_model,
-            "messages": [
-                {"role": "system", "content": _RUBRIC},
-                {"role": "user", "content": user},
-            ],
-            "temperature": 0.0,
-        },
-        timeout=120.0,
+    text = chat(
+        [
+            {"role": "system", "content": _RUBRIC},
+            {"role": "user", "content": user},
+        ],
+        name="eval.judge",
     )
-    resp.raise_for_status()
-    text = resp.json()["choices"][0]["message"]["content"]
     m = _JSON_RE.search(text)
     return json.loads(m.group(0)) if m else {"faithfulness": None, "answer_relevancy": None}

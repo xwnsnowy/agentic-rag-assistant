@@ -10,7 +10,7 @@
       "hit": 0.7,
       "mrr": 0.4533333333333333,
       "precision": 0.43166666666666664,
-      "latency_ms": 502.5968300000386,
+      "latency_ms": 535.5526700001064,
       "faithfulness": 0.63,
       "relevancy": 0.6799999999999999,
       "abstention": 1.0
@@ -20,9 +20,9 @@
       "hit": 0.9,
       "mrr": 0.7833333333333333,
       "precision": 0.6,
-      "latency_ms": 1609.4527600002039,
-      "faithfulness": 0.8099999999999999,
-      "relevancy": 0.86,
+      "latency_ms": 1555.4721600001358,
+      "faithfulness": 0.8300000000000001,
+      "relevancy": 0.8699999999999999,
       "abstention": 1.0
     },
     {
@@ -30,8 +30,8 @@
       "hit": 0.9,
       "mrr": 0.7583333333333333,
       "precision": 0.5,
-      "latency_ms": 1695.5810100003873,
-      "faithfulness": 0.8300000000000001,
+      "latency_ms": 1657.2075200001564,
+      "faithfulness": 0.8400000000000001,
       "relevancy": 0.9,
       "abstention": 1.0
     },
@@ -40,7 +40,7 @@
       "hit": 1.0,
       "mrr": 0.9,
       "precision": 0.7,
-      "latency_ms": 2602.571519999765,
+      "latency_ms": 2575.776279999991,
       "faithfulness": 0.77,
       "relevancy": 0.79,
       "abstention": 1.0

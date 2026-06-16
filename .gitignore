@@ -11,3 +11,7 @@ web/out/
 .venv/
 __pycache__/
 *.pyc
+
+# Unrelated local tools
+ACLib/
+AutoClicker.exe

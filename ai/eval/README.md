@@ -58,7 +58,13 @@ _10 answerable items + 1 negative trap. `n=11` (starter set; expanding to 30-50)
 6. **No hallucination on the trap.** abstention = 1.0: the system says "not in the docs"
    for the negative question instead of inventing an API.
 
+## Observability
+
+LLM calls (generation + judge) are traced in **Langfuse** via the `langfuse.openai`
+drop-in — model, token usage, **cost**, and latency per request show up in the
+dashboard (verified: gpt-4o-mini, ~1.7s avg, cost auto-computed). Tracing is a
+no-op when the Langfuse keys are unset.
+
 ## Next
 
-- Wire Langfuse for per-request cost/latency tracing.
 - Expand the golden dataset to 30-50 items to stabilise the generation metrics.

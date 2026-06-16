@@ -115,7 +115,9 @@ is the first place to look for how to run anything.
 - db migrate: `cd ai && python -m scripts.init_db` (pgvector ext + documents + chunks)
 - db seed/DoD: `cd ai && python -m scripts.seed_chunk` (insert 1 chunk + cosine query)
 - fetch corpus: `cd ai && python -m scripts.fetch_corpus` (LangGraph v1.0 docs -> data/raw/ + manifest.json; pinned tag 1.0.10)
-- eval: _(Phase 1 — TODO: command to run the eval harness over the golden dataset)_
+- eval: `cd ai && python -m scripts.run_eval --judge` (compares keyword/baseline/hybrid/hybrid+rerank; `--judge` adds faithfulness/relevancy via LLM, traced to Langfuse)
+- ask (RAG): `cd ai && python -m scripts.ask "<question>" --config hybrid+rerank`
+- ingest corpus: `cd ai && python -m scripts.ingest` (chunk -> embed -> upsert; re-runnable)
 - lint/format: _(TODO once configured)_
 
 ## Reference files

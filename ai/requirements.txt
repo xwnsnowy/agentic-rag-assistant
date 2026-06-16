@@ -16,3 +16,9 @@ httpx>=0.28
 
 # Use the OS trust store for TLS (corporate/local CA on this machine)
 truststore>=0.10
+
+# LLM client (OpenAI-compatible) — also used by the langfuse.openai trace drop-in
+openai>=1.50
+
+# Observability: traces, cost, latency
+langfuse>=4.0

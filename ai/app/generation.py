@@ -14,9 +14,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-import httpx
-
 from app.config import get_settings
+from app.llm import chat
 from app.retrieval import Result
 
 SYSTEM_PROMPT = (
@@ -80,21 +79,13 @@ def generate(query: str, results: list[Result]) -> Answer:
     if not settings.openrouter_api_key:
         return Answer(text=None, context=results, prompt=user_prompt)
 
-    resp = httpx.post(
-        f"{settings.openrouter_base}/chat/completions",
-        headers={"Authorization": f"Bearer {settings.openrouter_api_key}"},
-        json={
-            "model": settings.llm_model,
-            "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt},
-            ],
-            "temperature": 0.0,
-        },
-        timeout=120.0,
+    text = chat(
+        [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ],
+        name="rag.generate",
     )
-    resp.raise_for_status()
-    text = resp.json()["choices"][0]["message"]["content"]
     return Answer(
         text=text,
         citations=_cited_chunks(text, results),

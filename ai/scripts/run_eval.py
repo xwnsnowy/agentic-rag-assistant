@@ -12,6 +12,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from app import observability as obs  # noqa: E402
 from eval.harness import render_markdown, run_eval, save  # noqa: E402
 
 
@@ -24,6 +25,7 @@ def main() -> None:
     summary = run_eval(k=args.k, judge=args.judge)
     print(render_markdown(summary))
     out = save(summary)
+    obs.flush()  # ship buffered Langfuse traces before exit
     print(f"\nSaved -> {out}")
 
 

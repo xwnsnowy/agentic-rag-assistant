@@ -14,6 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from app import observability as obs  # noqa: E402
 from app.pipeline import CONFIGS, HYBRID_RERANK, answer_question  # noqa: E402
 
 BY_NAME = {c.name: c for c in CONFIGS}
@@ -26,6 +27,7 @@ def main() -> None:
     args = ap.parse_args()
 
     ans = answer_question(args.query, BY_NAME[args.config])
+    obs.flush()  # ship buffered Langfuse traces before exit
 
     if ans.text is None:
         print(f"[dry-run: no OPENROUTER_API_KEY] retrieved {len(ans.context)} chunks:\n")
