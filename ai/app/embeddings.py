@@ -27,16 +27,28 @@ def embed(text: str) -> list[float]:
     return fake_embed(text, settings.embedding_dim)
 
 
-def _embed_remote(text: str) -> list[float]:
+def embed_many(texts: list[str]) -> list[list[float]]:
+    """Embed a batch of texts. Uses one API call per batch when a key is set."""
+    if not texts:
+        return []
+    settings = get_settings()
+    if settings.embedding_api_key:
+        return _embed_remote(texts)
+    return [fake_embed(t, settings.embedding_dim) for t in texts]
+
+
+def _embed_remote(text_or_texts: str | list[str]) -> list:
     settings = get_settings()
     resp = httpx.post(
         f"{settings.embedding_api_base}/embeddings",
         headers={"Authorization": f"Bearer {settings.embedding_api_key}"},
-        json={"model": settings.embedding_model, "input": text},
-        timeout=30.0,
+        json={"model": settings.embedding_model, "input": text_or_texts},
+        timeout=60.0,
     )
     resp.raise_for_status()
-    return resp.json()["data"][0]["embedding"]
+    data = sorted(resp.json()["data"], key=lambda d: d["index"])
+    embeddings = [d["embedding"] for d in data]
+    return embeddings[0] if isinstance(text_or_texts, str) else embeddings
 
 
 def fake_embed(text: str, dim: int) -> list[float]:
