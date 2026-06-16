@@ -1,0 +1,15 @@
+# AI service — Python 3.14
+# Web framework
+fastapi>=0.115
+uvicorn[standard]>=0.34
+
+# Config
+pydantic-settings>=2.7
+python-dotenv>=1.0
+
+# Postgres (psycopg3). We send vectors as text and cast ::vector in SQL,
+# so no extra pgvector adapter package is needed.
+psycopg[binary]>=3.2
+
+# HTTP client for the embeddings API (OpenAI-compatible)
+httpx>=0.28

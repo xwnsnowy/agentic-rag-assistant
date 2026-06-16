@@ -1,0 +1,13 @@
+# Secrets — never commit
+.env
+.env*.local
+
+# Node / Next.js
+node_modules/
+web/.next/
+web/out/
+
+# Python
+.venv/
+__pycache__/
+*.pyc

@@ -1,0 +1,117 @@
+{
+  "meta": {
+    "project": "Agentic RAG Assistant — LangGraph docs",
+    "framework_version": "LangGraph v1.0 (stable since Oct 2025), Python.",
+    "note": "AI-library docs change fast and wrong answers look plausible — VERIFY every ground_truth against the pinned v1.0 docs, never from memory. Avoid deprecated idioms (e.g. set_entry_point); prefer current v1.0 patterns. Expand to 30-50 items. Keep ~40% easy / 40% medium / 20% hard, mix the 'type' field, and include 3-5 'negative' traps (questions the docs don't answer) to test that the system says 'not found' instead of hallucinating.",
+    "schema": {
+      "id": "định danh duy nhất",
+      "question": "câu hỏi người dùng",
+      "ground_truth": "câu trả lời tham chiếu (LLM-as-judge chấm faithfulness/relevancy). Với câu negative: đáp án đúng là hệ thống từ chối / nói không có trong tài liệu.",
+      "expected_source_hint": "trang/section docs mà retrieval ĐÚNG cần lấy. null nếu là câu bẫy.",
+      "type": "factual | how-to | conceptual | comparison | multi-hop | negative",
+      "difficulty": "easy | medium | hard",
+      "version_sensitive": "true nếu đáp án dễ đổi theo version LangGraph"
+    }
+  },
+  "items": [
+    {
+      "id": "gd-001",
+      "question": "StateGraph trong LangGraph là gì?",
+      "ground_truth": "StateGraph là building block trung tâm của LangGraph: nó định nghĩa một đồ thị gồm các node (bước tính toán) nối với nhau bằng edge (luồng điều khiển), tất cả cùng đọc/ghi vào một object State chung. Sau khi định nghĩa xong, bạn compile nó thành một graph thực thi được.",
+      "expected_source_hint": "Concepts > Low Level / Graphs (StateGraph)",
+      "type": "conceptual",
+      "difficulty": "easy",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-002",
+      "question": "State trong LangGraph thường được định nghĩa bằng kiểu gì?",
+      "ground_truth": "State thường được định nghĩa bằng một TypedDict hoặc một Pydantic BaseModel, mô tả cấu trúc dữ liệu chia sẻ mà các node đọc và cập nhật trong suốt quá trình chạy graph.",
+      "expected_source_hint": "Concepts > Low Level (State schema)",
+      "type": "factual",
+      "difficulty": "easy",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-003",
+      "question": "Một node trong LangGraph nhận và trả về cái gì?",
+      "ground_truth": "Node là một hàm (hoặc runnable) nhận vào State hiện tại và trả về một dict chứa các cập nhật cho State. Các cập nhật đó được merge vào State chung (theo reducer của từng channel) thay vì thay thế toàn bộ State.",
+      "expected_source_hint": "Concepts > Low Level (Nodes)",
+      "type": "conceptual",
+      "difficulty": "medium",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-004",
+      "question": "Reducer trong State để làm gì, và add_messages là gì?",
+      "ground_truth": "Reducer quy định cách một cập nhật được gộp vào channel tương ứng của State (ví dụ nối thêm vào danh sách thay vì ghi đè). add_messages là một reducer dựng sẵn cho danh sách message: nó nhận danh sách hiện tại cộng với message mới và trả về danh sách đã gộp. Thường khai báo qua Annotated, ví dụ messages: Annotated[list, add_messages].",
+      "expected_source_hint": "Concepts > Low Level (Reducers); add_messages",
+      "type": "conceptual",
+      "difficulty": "medium",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-005",
+      "question": "Conditional edge khác edge thường ở chỗ nào?",
+      "ground_truth": "Edge thường (add_edge) nối cố định từ node A sang node B. Conditional edge (add_conditional_edges) định tuyến động: một hàm routing nhận State và trả về tên node kế tiếp (hoặc danh sách node), cho phép graph rẽ nhánh theo điều kiện — ví dụ sau node LLM thì quyết định đi tới node tool hay kết thúc.",
+      "expected_source_hint": "Concepts > Low Level (Edges / Conditional edges)",
+      "type": "comparison",
+      "difficulty": "medium",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-006",
+      "question": "START và END trong LangGraph là gì?",
+      "ground_truth": "START và END là hai node ảo (sentinel). Bạn nối add_edge(START, \"ten_node\") để chỉ định node chạy đầu tiên, và nối một node tới END để đánh dấu điểm kết thúc luồng. Lưu ý: idiom cũ set_entry_point() đã bị deprecate, v1.0 dùng edge từ START.",
+      "expected_source_hint": "Concepts > Low Level (START/END)",
+      "type": "factual",
+      "difficulty": "medium",
+      "version_sensitive": true
+    },
+    {
+      "id": "gd-007",
+      "question": "Checkpointer (checkpointing) trong LangGraph dùng để làm gì?",
+      "ground_truth": "Checkpointer lưu lại State của graph sau mỗi bước node, nhờ đó có persistence: memory đa lượt (nhớ hội thoại qua nhiều lần invoke), khả năng phục hồi khi lỗi, và human-in-the-loop. Khi compile graph bạn truyền checkpointer (ví dụ MemorySaver cho in-memory, hoặc bản lưu Postgres/Sqlite cho bền vững).",
+      "expected_source_hint": "Concepts > Persistence (Checkpointers)",
+      "type": "how-to",
+      "difficulty": "hard",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-008",
+      "question": "Khi đã bật checkpointer, làm sao tách các cuộc hội thoại khác nhau?",
+      "ground_truth": "Truyền một thread_id trong config khi gọi graph, dạng config={\"configurable\": {\"thread_id\": \"...\"}}. Mỗi thread_id là một luồng state riêng, nên các cuộc hội thoại khác nhau không lẫn lộn dù dùng chung graph và checkpointer.",
+      "expected_source_hint": "Concepts > Persistence (Threads / thread_id)",
+      "type": "how-to",
+      "difficulty": "hard",
+      "version_sensitive": true
+    },
+    {
+      "id": "gd-009",
+      "question": "create_react_agent dùng để làm gì và import từ đâu?",
+      "ground_truth": "create_react_agent (trong langgraph.prebuilt) là helper dựng sẵn tạo một ReAct agent: bạn truyền model và danh sách tools (kèm prompt tùy chọn), nó trả về một graph đã compile gồm node LLM suy luận chọn tool và node thực thi tool, với conditional edge lặp lại tới khi LLM không cần gọi tool nữa. Dùng khi muốn agent ReAct nhanh mà không phải dựng graph thủ công.",
+      "expected_source_hint": "Reference > langgraph.prebuilt > create_react_agent",
+      "type": "how-to",
+      "difficulty": "medium",
+      "version_sensitive": true
+    },
+    {
+      "id": "gd-010",
+      "question": "Tôi muốn một chatbot có thể gọi tool, nhớ được hội thoại qua nhiều lượt, và xử lý nhiều người dùng song song. Cần kết hợp những cơ chế nào của LangGraph?",
+      "ground_truth": "Kết hợp: dùng StateGraph với State chứa danh sách messages (reducer add_messages) hoặc dùng create_react_agent để có sẵn vòng gọi tool; thêm checkpointer khi compile để có memory đa lượt và persistence; và truyền thread_id riêng cho mỗi người dùng/cuộc hội thoại trong config để các phiên không lẫn nhau. Đây là câu multi-hop vì cần ghép kiến thức từ State/messages, tool calling, persistence và threads.",
+      "expected_source_hint": "Concepts > Low Level (messages); Prebuilt (create_react_agent); Persistence (checkpointer, threads)",
+      "type": "multi-hop",
+      "difficulty": "hard",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-011",
+      "question": "LangGraph có cung cấp sẵn một vector database để lưu embeddings không?",
+      "ground_truth": "Không. LangGraph là framework orchestration cho agent/workflow dạng graph; nó không phải vector database. Việc lưu trữ embeddings được làm bằng một vector store riêng (ví dụ pgvector, hoặc các tích hợp trong hệ sinh thái LangChain), không phải tính năng của bản thân LangGraph. Đáp án đúng cho hệ thống là nói tài liệu không mô tả điều này, không bịa ra một API.",
+      "expected_source_hint": null,
+      "type": "negative",
+      "difficulty": "medium",
+      "version_sensitive": false
+    }
+  ]
+}
