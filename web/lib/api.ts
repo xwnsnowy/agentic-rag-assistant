@@ -45,3 +45,20 @@ export async function ask(
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
+
+export type AgentResponse = {
+  question: string;
+  answer: string;
+  tools_used: string[];
+  rounds: number;
+};
+
+export async function runAgent(question: string): Promise<AgentResponse> {
+  const res = await fetch(`${API_URL}/agent`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question }),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
