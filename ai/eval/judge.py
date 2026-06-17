@@ -25,13 +25,13 @@ _RUBRIC = (
     "LangGraph v1.0. Given the QUESTION, the CONTEXT passages the system "
     "retrieved, a reference GROUND_TRUTH, and the system ANSWER, return ONLY a "
     "JSON object: {\"faithfulness\": 0..1, \"answer_relevancy\": 0..1, "
-    "\"abstained\": true|false, \"reason\": \"...\"}. "
+    "\"context_precision\": 0..1, \"context_recall\": 0..1, \"reason\": \"...\"}. "
     "faithfulness = fraction of the answer's claims supported by CONTEXT (1.0 = "
-    "fully grounded, no invented facts). answer_relevancy = how well it addresses "
-    "the QUESTION. abstained = true if the answer DECLINES to affirm a feature the "
-    "docs don't support — i.e. it says the information isn't in the documentation OR "
-    "that LangGraph does not provide/have it; false only if the answer confirms or "
-    "invents the asked-about feature."
+    "fully grounded, no invented facts). answer_relevancy = how well the answer "
+    "addresses the QUESTION. context_precision = fraction of the CONTEXT passages "
+    "that are actually relevant to answering the QUESTION (1.0 = little irrelevant "
+    "noise). context_recall = fraction of the GROUND_TRUTH's information that is "
+    "present in / supported by the CONTEXT (1.0 = retrieval surfaced everything needed)."
 )
 
 
@@ -86,6 +86,8 @@ def judge_negative(question: str, answer: str) -> bool:
 _NUM_RE = {
     "faithfulness": re.compile(r'"faithfulness"\s*:\s*([0-9.]+)'),
     "answer_relevancy": re.compile(r'"answer_relevancy"\s*:\s*([0-9.]+)'),
+    "context_precision": re.compile(r'"context_precision"\s*:\s*([0-9.]+)'),
+    "context_recall": re.compile(r'"context_recall"\s*:\s*([0-9.]+)'),
 }
 _ABSTAIN_RE = re.compile(r'"abstained"\s*:\s*(true|false)')
 

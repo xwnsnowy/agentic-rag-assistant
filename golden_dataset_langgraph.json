@@ -407,6 +407,264 @@
       "type": "negative",
       "difficulty": "hard",
       "version_sensitive": false
+    },
+    {
+      "id": "gd-031",
+      "question": "What is a super-step in LangGraph execution?",
+      "question_vi": "Super-step trong thực thi LangGraph là gì?",
+      "ground_truth": "Một super-step là một vòng lặp qua các node của graph: các node chạy song song thuộc cùng một super-step, node chạy tuần tự thuộc các super-step khác nhau. Graph thực thi theo từng super-step.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "graph-api"
+      ],
+      "type": "conceptual",
+      "difficulty": "easy",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-032",
+      "question": "How do you stream state updates from a graph as they happen?",
+      "question_vi": "Làm sao stream các cập nhật state khi chúng xảy ra?",
+      "ground_truth": "Dùng .stream() với stream_mode='updates' để nhận phần state mà mỗi node vừa cập nhật sau mỗi bước; 'values' thì trả toàn bộ state sau mỗi bước.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "streaming"
+      ],
+      "type": "how-to",
+      "difficulty": "easy",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-033",
+      "question": "What is the difference between stream_mode 'updates' and 'values'?",
+      "question_vi": "Khác nhau giữa stream_mode 'updates' và 'values'?",
+      "ground_truth": "'updates' phát phần thay đổi do từng node trả về sau mỗi bước; 'values' phát toàn bộ state hiện tại sau mỗi bước. updates gọn hơn, values cho ảnh chụp đầy đủ.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "streaming"
+      ],
+      "type": "factual",
+      "difficulty": "medium",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-034",
+      "question": "How do you trim messages to fit the context window?",
+      "question_vi": "Làm sao cắt bớt messages cho vừa context window?",
+      "ground_truth": "Dùng tiện ích trim messages để cắt bớt lịch sử hội thoại theo số token/số lượng trước khi đưa vào model, giữ phần quan trọng (thường là các message gần nhất).",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "add-memory"
+      ],
+      "type": "how-to",
+      "difficulty": "medium",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-035",
+      "question": "How can you summarize past messages in a long conversation?",
+      "question_vi": "Làm sao tóm tắt các message cũ trong hội thoại dài?",
+      "ground_truth": "Tạo một bước tóm tắt (summarize messages): dùng LLM tóm tắt các message cũ thành một summary ngắn rồi thay thế, để giữ ngữ cảnh mà không vượt context.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "add-memory"
+      ],
+      "type": "how-to",
+      "difficulty": "medium",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-036",
+      "question": "What is the orchestrator-worker pattern in LangGraph?",
+      "question_vi": "Pattern orchestrator-worker trong LangGraph là gì?",
+      "ground_truth": "Một node orchestrator chia bài toán thành các subtask và giao cho nhiều worker (thường chạy song song); kết quả các worker được gộp lại. Hữu ích khi số subtask không biết trước.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "workflows-agents"
+      ],
+      "type": "conceptual",
+      "difficulty": "medium",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-037",
+      "question": "What is the evaluator-optimizer pattern?",
+      "question_vi": "Pattern evaluator-optimizer là gì?",
+      "ground_truth": "Một vòng lặp gồm node tạo kết quả và node đánh giá (evaluator); nếu chưa đạt, phản hồi được đưa lại để cải thiện (optimize) cho tới khi đạt tiêu chí.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "workflows-agents"
+      ],
+      "type": "conceptual",
+      "difficulty": "medium",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-038",
+      "question": "What is prompt chaining?",
+      "question_vi": "Prompt chaining là gì?",
+      "ground_truth": "Prompt chaining là nối nhiều bước LLM tuần tự, output của bước trước làm input bước sau, để chia một tác vụ phức tạp thành các bước nhỏ dễ kiểm soát.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "workflows-agents"
+      ],
+      "type": "conceptual",
+      "difficulty": "easy",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-039",
+      "question": "How do you access the long-term store inside a node?",
+      "question_vi": "Làm sao truy cập long-term store bên trong một node?",
+      "ground_truth": "Node nhận store qua runtime/tham số và gọi các method của store (get/put/search) để đọc-ghi long-term memory; có thể bật semantic search bằng index embeddings.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "add-memory"
+      ],
+      "type": "how-to",
+      "difficulty": "medium",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-040",
+      "question": "Which environment variables turn on LangSmith tracing?",
+      "question_vi": "Biến môi trường nào bật LangSmith tracing?",
+      "ground_truth": "Đặt LANGSMITH_TRACING=true và LANGSMITH_API_KEY (tùy chọn LANGSMITH_PROJECT). Khi bật, các lần chạy graph được trace tự động lên LangSmith.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "observability"
+      ],
+      "type": "factual",
+      "difficulty": "medium",
+      "version_sensitive": true
+    },
+    {
+      "id": "gd-041",
+      "question": "How do you implement human-in-the-loop with interrupt?",
+      "question_vi": "Làm sao làm human-in-the-loop với interrupt?",
+      "ground_truth": "Gọi interrupt() trong node để dừng và chờ input người dùng; resume bằng .invoke/.stream với Command(resume=...). Cần checkpointer để giữ state lúc dừng.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "graph-api",
+        "use-subgraphs"
+      ],
+      "type": "how-to",
+      "difficulty": "hard",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-042",
+      "question": "How do you both pick the next node and update state from inside a node?",
+      "question_vi": "Làm sao vừa chọn node kế tiếp vừa cập nhật state từ trong node?",
+      "ground_truth": "Trả về Command(goto=<node>, update=<dict>) từ node: goto định tuyến động tới node tiếp theo, update ghi vào state cùng lúc.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "graph-api"
+      ],
+      "type": "how-to",
+      "difficulty": "medium",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-043",
+      "question": "What does the add_messages reducer do?",
+      "question_vi": "Reducer add_messages làm gì?",
+      "ground_truth": "add_messages là reducer cho key dạng danh sách message: nó nối/cập nhật message vào state đúng cách (append, và update theo id) thay vì ghi đè, để giữ lịch sử hội thoại.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "graph-api"
+      ],
+      "type": "conceptual",
+      "difficulty": "easy",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-044",
+      "question": "What is the recursion_limit used for?",
+      "question_vi": "recursion_limit dùng để làm gì?",
+      "ground_truth": "recursion_limit giới hạn số super-step tối đa trong một lần chạy; vượt giới hạn sẽ raise GraphRecursionError, dùng để chặn vòng lặp vô tận.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "graph-api"
+      ],
+      "type": "factual",
+      "difficulty": "easy",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-045",
+      "question": "What does streaming checkpoints (stream_mode='checkpoints') give you?",
+      "question_vi": "stream_mode='checkpoints' cho bạn cái gì?",
+      "ground_truth": "stream_mode='checkpoints' phát ra các checkpoint state khi graph chạy, cho phép theo dõi/khôi phục trạng thái đã lưu (liên quan tới persistence/checkpointer).",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "streaming"
+      ],
+      "type": "conceptual",
+      "difficulty": "medium",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-046",
+      "question": "How do you add a compiled subgraph as a node when parent and child share state keys?",
+      "question_vi": "Làm sao thêm subgraph đã compile làm node khi cha-con chung key state?",
+      "ground_truth": "Khi cha và con dùng chung key state, thêm subgraph đã compile trực tiếp làm một node; state chảy qua tự động theo các key chung. Nếu schema khác nhau thì phải gọi subgraph trong một hàm node.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "use-subgraphs"
+      ],
+      "type": "how-to",
+      "difficulty": "medium",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-047",
+      "question": "What is ToolNode and when do you use it?",
+      "question_vi": "ToolNode là gì và dùng khi nào?",
+      "ground_truth": "ToolNode (langgraph.prebuilt) là node dựng sẵn thực thi các tool mà model gọi, trả ToolMessage vào state. Dùng khi muốn gắn bước chạy tool vào graph thay vì tự viết.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "workflows-agents"
+      ],
+      "type": "conceptual",
+      "difficulty": "easy",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-048",
+      "question": "What is the difference between InMemorySaver and PostgresSaver?",
+      "question_vi": "Khác nhau giữa InMemorySaver và PostgresSaver?",
+      "ground_truth": "InMemorySaver lưu checkpoint trong RAM, hợp cho dev/test (mất khi tắt). PostgresSaver lưu vào Postgres, bền vững, hợp cho production. Cả hai đều là checkpointer.",
+      "expected_source_hint": null,
+      "expected_slugs": [
+        "persistence",
+        "add-memory"
+      ],
+      "type": "comparison",
+      "difficulty": "medium",
+      "version_sensitive": true
+    },
+    {
+      "id": "gd-049",
+      "question": "Does LangGraph provide a built-in rate limiter for outbound API calls?",
+      "question_vi": "LangGraph có sẵn rate limiter cho các lời gọi API ra ngoài không?",
+      "ground_truth": "Không. Tài liệu LangGraph không mô tả một rate limiter dựng sẵn cho lời gọi API. Đáp án đúng là nói tài liệu không đề cập, không bịa ra một API như vậy.",
+      "expected_source_hint": null,
+      "expected_slugs": [],
+      "type": "negative",
+      "difficulty": "medium",
+      "version_sensitive": false
+    },
+    {
+      "id": "gd-050",
+      "question": "Does LangGraph automatically generate unit tests for your nodes?",
+      "question_vi": "LangGraph có tự sinh unit test cho các node của bạn không?",
+      "ground_truth": "Không. Tài liệu LangGraph không mô tả tính năng tự sinh unit test cho node. Đáp án đúng là nói tài liệu không cung cấp điều này, không bịa ra.",
+      "expected_source_hint": null,
+      "expected_slugs": [],
+      "type": "negative",
+      "difficulty": "hard",
+      "version_sensitive": false
     }
   ]
 }

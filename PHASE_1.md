@@ -8,11 +8,11 @@
 ## Definition of Done — all met
 
 - [x] **Eval table comparing ≥3 retrieval configs with real numbers** — keyword /
-      baseline / hybrid / hybrid+rerank over a 30-item golden set.
-- [x] **hybrid+rerank beats baseline (and I can explain why)** — MRR 0.897 → **0.923**,
-      P@5 0.585 → **0.723**, hit@5 0.962 → **1.000**.
+      baseline / hybrid / hybrid+rerank over a 50-item golden set.
+- [x] **hybrid+rerank beats baseline (and I can explain why)** — MRR 0.902 → **0.928**,
+      P@5 0.627 → **0.727**, hit@5 0.977 → **1.000**.
 - [x] **Faithfulness measured + every answer carries citations** — LLM-as-judge
-      faithfulness ~0.86; answers cite source chunks as `[n]`.
+      faithfulness ~0.92 (+ Ragas-style context-precision/recall); answers cite chunks as `[n]`.
 - [x] **Langfuse dashboard for cost + latency per request** — verified (gpt-4o-mini,
       cost auto-computed, ~1.7s avg).
 
@@ -31,14 +31,17 @@
 | Eval: metrics + LLM-judge + harness | `ai/eval/` |
 | Chat UI + `POST /ask` | `web/`, `app/main.py` |
 
-## Results (top-5, real embeddings, Cohere rerank, gpt-4o-mini judge, n=30)
+## Results (top-5, real embeddings, Cohere rerank, gpt-4o-mini judge, n=50)
 
-| Config | hit@5 | MRR | P@5 | latency (ms) | faithfulness | relevancy | neg-handling |
-|---|---|---|---|---|---|---|---|
-| keyword | 0.462 | 0.367 | 0.351 | 345 | 0.49 | 0.51 | 1.00 |
-| baseline (vector) | 0.962 | 0.897 | 0.585 | 1284 | 0.86 | 0.90 | 1.00 |
-| hybrid (RRF) | 0.962 | 0.888 | 0.562 | 1767 | 0.86 | 0.91 | 1.00 |
-| **hybrid+rerank** | **1.000** | **0.923** | **0.723** | 3001 | 0.86 | 0.89 | 1.00 |
+| Config | hit@5 | MRR | P@5 | latency (ms) | faithfulness | relevancy | ctx-prec | ctx-recall | neg-handling |
+|---|---|---|---|---|---|---|---|---|---|
+| keyword | 0.386 | 0.330 | 0.298 | 429 | 0.43 | 0.46 | 0.43 | 0.42 | 1.00 |
+| baseline (vector) | 0.977 | 0.902 | 0.627 | 1422 | 0.90 | 0.92 | 0.89 | 0.88 | 1.00 |
+| hybrid (RRF) | 0.977 | 0.896 | 0.627 | 2028 | 0.90 | 0.93 | 0.90 | 0.89 | 1.00 |
+| **hybrid+rerank** | **1.000** | **0.928** | **0.727** | 3001 | **0.92** | **0.93** | **0.92** | **0.91** | 1.00 |
+
+_Context-precision/recall are Ragas-style metrics implemented as an LLM-judge — see
+[ai/eval/README.md](ai/eval/README.md) for why the Ragas library itself wasn't installable._
 
 ## Key decisions (interview-defensible)
 

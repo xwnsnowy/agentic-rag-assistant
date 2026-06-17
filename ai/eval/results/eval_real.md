@@ -1,11 +1,11 @@
 # Eval results (top-5)
 
 - Embedding vectors: **real**
-- LLM-judge: **on**  ·  answerable items: 26  ·  negatives: 4
+- LLM-judge: **on**  ·  answerable items: 44  ·  negatives: 6
 
-| Config | hit@k | MRR | P@k | latency (ms) | faithfulness | relevancy | neg-handling |
-|---|---|---|---|---|---|---|---|
-| keyword | 0.462 | 0.367 | 0.351 | 345 | 0.492 | 0.512 | 1.000 |
-| baseline | 0.962 | 0.897 | 0.585 | 1284 | 0.858 | 0.900 | 1.000 |
-| hybrid | 0.962 | 0.888 | 0.562 | 1767 | 0.862 | 0.912 | 1.000 |
-| hybrid+rerank | 1.000 | 0.923 | 0.723 | 3001 | 0.862 | 0.892 | 1.000 |
+| Config | hit@k | MRR | P@k | latency (ms) | faithfulness | relevancy | ctx-prec | ctx-recall | neg-handling |
+|---|---|---|---|---|---|---|---|---|---|
+| keyword | 0.386 | 0.330 | 0.298 | 429 | 0.432 | 0.455 | 0.430 | 0.416 | 1.000 |
+| baseline | 0.977 | 0.902 | 0.627 | 1422 | 0.895 | 0.920 | 0.889 | 0.877 | 1.000 |
+| hybrid | 0.977 | 0.896 | 0.627 | 2028 | 0.898 | 0.927 | 0.899 | 0.886 | 1.000 |
+| hybrid+rerank | 1.000 | 0.928 | 0.727 | 3001 | 0.918 | 0.927 | 0.918 | 0.914 | 1.000 |

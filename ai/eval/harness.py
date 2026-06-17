@@ -38,7 +38,9 @@ class ConfigReport:
     latency_ms: float
     faithfulness: float | None = None
     relevancy: float | None = None
-    abstention: float | None = None  # fraction of negatives correctly refused
+    context_precision: float | None = None
+    context_recall: float | None = None
+    abstention: float | None = None  # fraction of negatives correctly handled
 
 
 def _mean(xs: list[float]) -> float:
@@ -57,7 +59,7 @@ def run_eval(configs=DEFAULT_CONFIGS, k: int = 5, judge: bool = False) -> dict:
     reports: list[ConfigReport] = []
     for cfg in configs:
         hits, rrs, precs, lats = [], [], [], []
-        faiths, relevs, abstains = [], [], []
+        faiths, relevs, ctxps, ctxrs, abstains = [], [], [], [], []
 
         for item in answerable:
             try:
@@ -77,6 +79,10 @@ def run_eval(configs=DEFAULT_CONFIGS, k: int = 5, judge: bool = False) -> dict:
                         faiths.append(float(v["faithfulness"]))
                     if v.get("answer_relevancy") is not None:
                         relevs.append(float(v["answer_relevancy"]))
+                    if v.get("context_precision") is not None:
+                        ctxps.append(float(v["context_precision"]))
+                    if v.get("context_recall") is not None:
+                        ctxrs.append(float(v["context_recall"]))
             except Exception as exc:  # noqa: BLE001 - skip on transient errors, don't crash the run
                 print(f"  [skip] {cfg.name}/{item['id']}: {type(exc).__name__}")
 
@@ -99,6 +105,8 @@ def run_eval(configs=DEFAULT_CONFIGS, k: int = 5, judge: bool = False) -> dict:
                 latency_ms=_mean(lats),
                 faithfulness=_mean(faiths) if faiths else None,
                 relevancy=_mean(relevs) if relevs else None,
+                context_precision=_mean(ctxps) if ctxps else None,
+                context_recall=_mean(ctxrs) if ctxrs else None,
                 abstention=_mean(abstains) if abstains else None,
             )
         )
@@ -121,8 +129,8 @@ def render_markdown(summary: dict) -> str:
         + ("" if summary["embedding"] == "real" else "  ← vector/hybrid columns are placeholders until a real key lands"),
         f"- LLM-judge: **{'on' if summary['judged'] else 'off'}**  ·  answerable items: {summary['n_answerable']}  ·  negatives: {summary['n_negative']}",
         "",
-        "| Config | hit@k | MRR | P@k | latency (ms) | faithfulness | relevancy | neg-handling |",
-        "|---|---|---|---|---|---|---|---|",
+        "| Config | hit@k | MRR | P@k | latency (ms) | faithfulness | relevancy | ctx-prec | ctx-recall | neg-handling |",
+        "|---|---|---|---|---|---|---|---|---|---|",
     ]
 
     def fmt(x):
@@ -131,7 +139,8 @@ def render_markdown(summary: dict) -> str:
     for r in summary["reports"]:
         lines.append(
             f"| {r['name']} | {r['hit']:.3f} | {r['mrr']:.3f} | {r['precision']:.3f} "
-            f"| {r['latency_ms']:.0f} | {fmt(r['faithfulness'])} | {fmt(r['relevancy'])} | {fmt(r['abstention'])} |"
+            f"| {r['latency_ms']:.0f} | {fmt(r['faithfulness'])} | {fmt(r['relevancy'])} "
+            f"| {fmt(r['context_precision'])} | {fmt(r['context_recall'])} | {fmt(r['abstention'])} |"
         )
     return "\n".join(lines)
 

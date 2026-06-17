@@ -24,13 +24,13 @@ observability — not just "calling an LLM API".
 ## Results (headline)
 
 Reranking over a hybrid candidate pool is the best retriever, beating the vector
-baseline on every retrieval metric (golden set, `n=30`):
+baseline on every metric (golden set, `n=50`):
 
-| Config | hit@5 | MRR | P@5 | latency |
-|---|---|---|---|---|
-| baseline (vector) | 0.962 | 0.897 | 0.585 | 1382 ms |
-| hybrid (RRF) | 0.962 | 0.888 | 0.562 | 1576 ms |
-| **hybrid+rerank** | **1.000** | **0.923** | **0.723** | 2350 ms |
+| Config | hit@5 | MRR | P@5 | faithfulness | ctx-recall | latency |
+|---|---|---|---|---|---|---|
+| baseline (vector) | 0.977 | 0.902 | 0.627 | 0.90 | 0.88 | 1422 ms |
+| hybrid (RRF) | 0.977 | 0.896 | 0.627 | 0.90 | 0.89 | 2028 ms |
+| **hybrid+rerank** | **1.000** | **0.928** | **0.727** | **0.92** | **0.91** | 3001 ms |
 
 The eval also surfaced a real weakness — weak handling of unanswerable "trap"
 questions — which was then **diagnosed and fixed** (stricter groundedness prompt +
