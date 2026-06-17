@@ -22,3 +22,8 @@ openai>=1.50
 
 # Observability: traces, cost, latency
 langfuse>=4.0
+
+# Agent layer (Phase 2): LangGraph orchestration + LangChain model/tooling
+langgraph>=1.0
+langchain-openai>=1.0
+langchain-core>=0.3
