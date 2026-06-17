@@ -119,6 +119,7 @@ is the first place to look for how to run anything.
 - ask (RAG): `cd ai && python -m scripts.ask "<question>" --config hybrid+rerank`
 - agent ask: `cd ai && python -m scripts.agent_ask "<question>"` (LangGraph agent picks tools: rag_search/calculator/list_doc_topics)
 - agent eval: `cd ai && python -m scripts.run_agent_eval` (tool-selection accuracy over eval/agent_dataset.json)
+- ragas eval: `cd ai && python -m scripts.export_for_ragas` then `.venv-ragas\Scripts\python -m eval.ragas_eval` (real Ragas lib in an isolated py3.12 venv — needs `requirements-ragas.txt`; see ai/eval/README.md for why it's separate)
 - ingest corpus: `cd ai && python -m scripts.ingest` (chunk -> embed -> upsert; re-runnable)
 - lint/format: _(TODO once configured)_
 

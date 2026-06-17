@@ -26,17 +26,38 @@ python -m scripts.run_eval --judge    # + faithfulness/relevancy/abstention (LLM
 `hit@k` saturates when expected pages are large, so **MRR / precision@k** are the
 honest retrieval signals here.
 
-### Why these metrics are LLM-judged, not the Ragas library
+### Two ways the metrics are computed (both shipped)
 
-The plan called for "Ragas + a custom LLM-judge". In practice the **Ragas package could
-not be installed cleanly** in this project: every Ragas version imports
-`langchain_community.chat_models.vertexai`, which current `langchain-community` no longer
-ships, and the older langchain stack Ragas needs (`langchain-core` 0.3) conflicts head-on
-with the **langchain 1.x** stack the Phase 2 agent requires (`langgraph` / `langchain-openai`
-pin `langchain-core >= 1.4`). Rather than fork the project into incompatible venvs, the
-four standard RAG metrics (faithfulness, answer-relevancy, context-precision,
-context-recall) are implemented here as a single LLM-judge call — the same definitions
-Ragas uses, run against `gpt-4o-mini`. See `eval/judge.py`.
+The plan called for "Ragas + a custom LLM-judge", and the project has **both**:
+
+1. **Inline LLM-judge** (`eval/judge.py`) — the four metric definitions implemented as one
+   `gpt-4o-mini` call, so `run_eval --judge` produces the full table in the main venv.
+2. **The real Ragas library** — wired via an **isolated venv + JSON bridge** (see
+   `requirements-ragas.txt`). Ragas needs the **langchain 0.3.x** stack (it imports
+   `langchain_community.chat_models.vertexai`, only present in `langchain-community < 0.4`),
+   which conflicts head-on with the **langchain 1.x** stack the Phase 2 agent requires
+   (`langgraph` / `langchain-openai` pin `langchain-core >= 1.4`). So the app exports
+   samples (`scripts/export_for_ragas.py`, langchain 1.x), and `eval/ragas_eval.py` scores
+   them in `.venv-ragas` (langchain 0.3.x). The two stacks never share a process.
+
+**Real Ragas scores (hybrid+rerank, 44 samples, gpt-4o-mini):**
+
+| metric | Ragas | inline judge |
+|---|---|---|
+| faithfulness | 0.934 | 0.918 |
+| answer_relevancy | 0.823 | 0.927 |
+| context_precision | 0.885 | 0.918 |
+| context_recall | 0.843 | 0.914 |
+
+The two agree closely on faithfulness and context-precision; Ragas scores answer-relevancy
+lower because it measures it differently (embedding similarity of LLM-generated questions vs
+the answer), which is a useful independent check rather than a contradiction.
+
+```bash
+# real Ragas (needs the isolated venv: py -3.12 -m venv ai/.venv-ragas; pip install -r ai/requirements-ragas.txt)
+python -m scripts.export_for_ragas              # main venv -> eval/results/ragas_input.json
+.venv-ragas/Scripts/python -m eval.ragas_eval   # ragas venv -> eval/results/ragas_scores.md
+```
 
 ## Results (top-5, real `text-embedding-3-small` vectors, Cohere `rerank-v3.5`, judge = gpt-4o-mini)
 

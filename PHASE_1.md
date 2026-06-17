@@ -40,8 +40,9 @@
 | hybrid (RRF) | 0.977 | 0.896 | 0.627 | 2028 | 0.90 | 0.93 | 0.90 | 0.89 | 1.00 |
 | **hybrid+rerank** | **1.000** | **0.928** | **0.727** | 3001 | **0.92** | **0.93** | **0.92** | **0.91** | 1.00 |
 
-_Context-precision/recall are Ragas-style metrics implemented as an LLM-judge — see
-[ai/eval/README.md](ai/eval/README.md) for why the Ragas library itself wasn't installable._
+_Metrics come two ways: an inline LLM-judge (shown above) **and** the real Ragas library
+run in an isolated venv (faithfulness 0.934, answer_relevancy 0.823, context_precision
+0.885, context_recall 0.843 for hybrid+rerank) — see [ai/eval/README.md](ai/eval/README.md)._
 
 ## Key decisions (interview-defensible)
 

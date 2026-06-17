@@ -1,0 +1,21 @@
+# Ragas eval runs in a SEPARATE venv (.venv-ragas, Python 3.12).
+#
+# Why separate: Ragas needs the langchain 0.3.x stack (and imports
+# langchain_community.chat_models.vertexai, which only exists in
+# langchain-community < 0.4). The main app/agent needs langchain 1.x
+# (langgraph / langchain-openai pin langchain-core >= 1.4). The two can't
+# coexist, so Ragas lives here and talks to the app via a JSON file.
+#
+# Setup:
+#   py -3.12 -m venv .venv-ragas
+#   .venv-ragas/Scripts/python -m pip install -r requirements-ragas.txt
+# Run:
+#   python -m scripts.export_for_ragas                  # main venv -> ragas_input.json
+#   .venv-ragas/Scripts/python -m eval.ragas_eval       # ragas venv -> ragas_scores
+
+ragas==0.2.15
+langchain-core>=0.3,<0.4
+langchain-community>=0.3,<0.4
+langchain-openai>=0.2,<0.3
+truststore>=0.10
+python-dotenv>=1.0
