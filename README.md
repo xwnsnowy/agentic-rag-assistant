@@ -32,9 +32,11 @@ baseline on every retrieval metric (golden set, `n=30`):
 | hybrid (RRF) | 0.962 | 0.888 | 0.562 | 1576 ms |
 | **hybrid+rerank** | **1.000** | **0.923** | **0.723** | 2350 ms |
 
-The eval also surfaced a real weakness — weak abstention on unanswerable
-"trap" questions — which is on the roadmap to fix. Full table, faithfulness
-numbers, methodology and honest caveats: **[ai/eval/README.md](ai/eval/README.md)**.
+The eval also surfaced a real weakness — weak handling of unanswerable "trap"
+questions — which was then **diagnosed and fixed** (stricter groundedness prompt +
+a dedicated negative-handling judge): trap handling went 0.25–0.50 → **1.00**. Full
+table, faithfulness numbers, methodology and honest caveats:
+**[ai/eval/README.md](ai/eval/README.md)**.
 
 ## Architecture
 

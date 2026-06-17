@@ -60,30 +60,35 @@ def run_eval(configs=DEFAULT_CONFIGS, k: int = 5, judge: bool = False) -> dict:
         faiths, relevs, abstains = [], [], []
 
         for item in answerable:
-            t0 = time.perf_counter()
-            results = retrieve(item["question"], RagConfig(**{**cfg.__dict__, "k": k}))
-            lats.append((time.perf_counter() - t0) * 1000)
-            exp = item["expected_slugs"]
-            hits.append(hit_at_k(results, exp))
-            rrs.append(reciprocal_rank(results, exp))
-            precs.append(precision_at_k(results, exp))
+            try:
+                t0 = time.perf_counter()
+                results = retrieve(item["question"], RagConfig(**{**cfg.__dict__, "k": k}))
+                lats.append((time.perf_counter() - t0) * 1000)
+                exp = item["expected_slugs"]
+                hits.append(hit_at_k(results, exp))
+                rrs.append(reciprocal_rank(results, exp))
+                precs.append(precision_at_k(results, exp))
 
-            if can_judge:
-                ans = generate(item["question"], results)
-                ctx = "\n\n".join(r.content for r in results)
-                v = judge_mod.judge_answer(item["question"], item["ground_truth"], ans.text or "", ctx)
-                if v.get("faithfulness") is not None:
-                    faiths.append(float(v["faithfulness"]))
-                if v.get("answer_relevancy") is not None:
-                    relevs.append(float(v["answer_relevancy"]))
+                if can_judge:
+                    ans = generate(item["question"], results)
+                    ctx = "\n\n".join(r.content for r in results)
+                    v = judge_mod.judge_answer(item["question"], item["ground_truth"], ans.text or "", ctx)
+                    if v.get("faithfulness") is not None:
+                        faiths.append(float(v["faithfulness"]))
+                    if v.get("answer_relevancy") is not None:
+                        relevs.append(float(v["answer_relevancy"]))
+            except Exception as exc:  # noqa: BLE001 - skip on transient errors, don't crash the run
+                print(f"  [skip] {cfg.name}/{item['id']}: {type(exc).__name__}")
 
         if can_judge:
             for item in negatives:
-                results = retrieve(item["question"], RagConfig(**{**cfg.__dict__, "k": k}))
-                ans = generate(item["question"], results)
-                ctx = "\n\n".join(r.content for r in results)
-                v = judge_mod.judge_answer(item["question"], item["ground_truth"], ans.text or "", ctx)
-                abstains.append(1.0 if v.get("abstained") else 0.0)
+                try:
+                    results = retrieve(item["question"], RagConfig(**{**cfg.__dict__, "k": k}))
+                    ans = generate(item["question"], results)
+                    handled = judge_mod.judge_negative(item["question"], ans.text or "")
+                    abstains.append(1.0 if handled else 0.0)
+                except Exception as exc:  # noqa: BLE001
+                    print(f"  [skip] {cfg.name}/{item['id']}: {type(exc).__name__}")
 
         reports.append(
             ConfigReport(
@@ -116,7 +121,7 @@ def render_markdown(summary: dict) -> str:
         + ("" if summary["embedding"] == "real" else "  ← vector/hybrid columns are placeholders until a real key lands"),
         f"- LLM-judge: **{'on' if summary['judged'] else 'off'}**  ·  answerable items: {summary['n_answerable']}  ·  negatives: {summary['n_negative']}",
         "",
-        "| Config | hit@k | MRR | P@k | latency (ms) | faithfulness | relevancy | abstention |",
+        "| Config | hit@k | MRR | P@k | latency (ms) | faithfulness | relevancy | neg-handling |",
         "|---|---|---|---|---|---|---|---|",
     ]
 

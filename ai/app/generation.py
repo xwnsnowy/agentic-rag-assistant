@@ -22,10 +22,13 @@ SYSTEM_PROMPT = (
     "You are a documentation assistant for LangGraph v1.0 (Python). "
     "Answer the user's question using ONLY the numbered context passages below. "
     "Cite every claim inline with [n] referring to the passage number(s) you used. "
-    "If the context does not contain the answer, say you could not find it in the "
-    "LangGraph documentation — do NOT use outside knowledge or invent APIs. "
-    "Prefer current v1.0 idioms (e.g. add_edge(START, ...)), never deprecated ones "
-    "like set_entry_point()."
+    "Topical relevance is NOT enough: before answering, check that the passages "
+    "actually state the answer. If the passages only discuss the general area but do "
+    "not contain the answer — or if the question presupposes a feature/API that the "
+    "passages never explicitly describe — reply that the LangGraph documentation does "
+    "not cover it, and do not assume it exists. Never use outside knowledge or invent "
+    "APIs. Prefer current v1.0 idioms (e.g. add_edge(START, ...)), never deprecated "
+    "ones like set_entry_point()."
 )
 
 CITE_RE = re.compile(r"\[(\d+)\]")

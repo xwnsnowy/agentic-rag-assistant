@@ -10,40 +10,40 @@
       "hit": 0.46153846153846156,
       "mrr": 0.36666666666666664,
       "precision": 0.35064102564102567,
-      "latency_ms": 441.39290384639304,
-      "faithfulness": 0.46923076923076923,
-      "relevancy": 0.49230769230769234,
-      "abstention": 0.5
+      "latency_ms": 344.8768230769544,
+      "faithfulness": 0.49230769230769234,
+      "relevancy": 0.5115384615384616,
+      "abstention": 1.0
     },
     {
       "name": "baseline",
       "hit": 0.9615384615384616,
       "mrr": 0.8974358974358974,
       "precision": 0.5846153846153846,
-      "latency_ms": 1382.3656653834264,
+      "latency_ms": 1284.360500000004,
       "faithfulness": 0.8576923076923078,
-      "relevancy": 0.8846153846153846,
-      "abstention": 0.25
+      "relevancy": 0.8999999999999999,
+      "abstention": 1.0
     },
     {
       "name": "hybrid",
       "hit": 0.9615384615384616,
       "mrr": 0.8878205128205128,
       "precision": 0.5615384615384615,
-      "latency_ms": 1576.1272307698584,
+      "latency_ms": 1766.9621961539056,
       "faithfulness": 0.8615384615384615,
-      "relevancy": 0.9038461538461539,
-      "abstention": 0.25
+      "relevancy": 0.9115384615384615,
+      "abstention": 1.0
     },
     {
       "name": "hybrid+rerank",
       "hit": 1.0,
       "mrr": 0.9230769230769231,
       "precision": 0.7230769230769231,
-      "latency_ms": 2349.654711538908,
-      "faithfulness": 0.8538461538461538,
-      "relevancy": 0.8692307692307693,
-      "abstention": 0.5
+      "latency_ms": 3001.251353846171,
+      "faithfulness": 0.8615384615384615,
+      "relevancy": 0.8923076923076922,
+      "abstention": 1.0
     }
   ]
 }

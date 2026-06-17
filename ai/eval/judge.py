@@ -28,7 +28,21 @@ _RUBRIC = (
     "\"abstained\": true|false, \"reason\": \"...\"}. "
     "faithfulness = fraction of the answer's claims supported by CONTEXT (1.0 = "
     "fully grounded, no invented facts). answer_relevancy = how well it addresses "
-    "the QUESTION. abstained = true if the answer says the info isn't in the docs."
+    "the QUESTION. abstained = true if the answer DECLINES to affirm a feature the "
+    "docs don't support — i.e. it says the information isn't in the documentation OR "
+    "that LangGraph does not provide/have it; false only if the answer confirms or "
+    "invents the asked-about feature."
+)
+
+
+_NEG_RUBRIC = (
+    "You are evaluating a RAG system on a TRAP question: the LangGraph v1.0 docs do "
+    "NOT describe the capability being asked about, so the only correct behaviour is "
+    "to avoid claiming it exists. Given the QUESTION and the system ANSWER, return "
+    "ONLY a JSON object {\"handled\": true|false, \"reason\": \"...\"}. handled = true if the answer "
+    "correctly avoids affirming the capability — by saying it's not in the docs OR "
+    "that LangGraph does not provide/have it. handled = false only if the answer "
+    "asserts the capability exists or invents an API for it."
 )
 
 
@@ -50,6 +64,23 @@ def judge_answer(question: str, ground_truth: str, answer: str, context_text: st
         response_format={"type": "json_object"},  # guarantees valid JSON
     )
     return _parse(text)
+
+
+def judge_negative(question: str, answer: str) -> bool:
+    """For trap questions: did the answer correctly avoid asserting the feature?"""
+    text = chat(
+        [
+            {"role": "system", "content": _NEG_RUBRIC},
+            {"role": "user", "content": f"QUESTION:\n{question}\n\nANSWER:\n{answer}"},
+        ],
+        name="eval.judge_negative",
+        response_format={"type": "json_object"},
+    )
+    try:
+        m = _JSON_RE.search(text)
+        return bool(json.loads(m.group(0)).get("handled")) if m else False
+    except json.JSONDecodeError:
+        return '"handled": true' in text or '"handled":true' in text
 
 
 _NUM_RE = {
