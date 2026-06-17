@@ -1,0 +1,36 @@
+# Render Blueprint for the FastAPI AI service (no Docker — native Python runtime).
+# Connect this repo in Render, set Root Directory to `ai/`, and fill the secret
+# env vars in the dashboard (they are sync:false here, i.e. NOT committed).
+services:
+  - type: web
+    name: agentic-rag-ai
+    runtime: python
+    rootDir: ai
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      # Secrets — set these in the Render dashboard, never commit:
+      - key: DATABASE_URL          # Neon pooled URL
+        sync: false
+      - key: EMBEDDING_API_KEY     # OpenAI
+        sync: false
+      - key: OPENROUTER_API_KEY    # LLM (can reuse the OpenAI key + base)
+        sync: false
+      - key: OPENROUTER_BASE
+        value: https://api.openai.com/v1
+      - key: LLM_MODEL
+        value: gpt-4o-mini
+      - key: COHERE_API_KEY        # rerank (optional)
+        sync: false
+      - key: LANGFUSE_PUBLIC_KEY   # observability (optional)
+        sync: false
+      - key: LANGFUSE_SECRET_KEY
+        sync: false
+      - key: LANGFUSE_HOST
+        value: https://cloud.langfuse.com
+      - key: CORS_ORIGINS          # set to your Vercel domain, e.g. https://your-app.vercel.app
+        sync: false

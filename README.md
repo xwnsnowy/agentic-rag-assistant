@@ -118,4 +118,5 @@ which to call:
 - **Phase 0 — Foundation:** ✅ complete
 - **Phase 1 — RAG core + Eval (flagship):** ✅ complete (eval table proves hybrid+rerank > baseline)
 - **Phase 2 — Agent layer (LangGraph tools + guardrails):** ✅ complete
-- **Phase 3 — Production polish (streaming, caching, deploy):** optional / next
+- **Phase 3 — Production polish:** deploy-ready (see **[DEPLOY.md](DEPLOY.md)** —
+  Vercel + Render + Neon, no Docker); streaming/caching/auth optional
