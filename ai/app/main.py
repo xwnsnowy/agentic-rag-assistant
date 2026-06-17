@@ -13,6 +13,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from app.agent import run_agent
 from app.config import get_settings
 from app.db import ping
 from app.pipeline import CONFIGS, HYBRID_RERANK, answer_question
@@ -68,4 +69,20 @@ def ask(req: AskRequest):
         "config": cfg.name,
         "answer": ans.text,
         "citations": ans.citations,
+    }
+
+
+class AgentRequest(BaseModel):
+    question: str
+
+
+@app.post("/agent")
+def agent_endpoint(req: AgentRequest):
+    """Run the LangGraph agent: it picks tools (rag_search/calculator/topics)."""
+    res = run_agent(req.question)
+    return {
+        "question": req.question,
+        "answer": res.answer,
+        "tools_used": res.tools_used,
+        "rounds": res.rounds,
     }
