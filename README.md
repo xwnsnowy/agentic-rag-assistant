@@ -98,8 +98,24 @@ pnpm dev        # http://localhost:3000
 - `golden_dataset_langgraph.json` — eval golden dataset (questions + ground truth + expected sources)
 - `Agentic_RAG_Build_Plan.md` / `PHASE_0.md` — phased plan and progress
 
+## Agent layer (Phase 2)
+
+A **LangGraph** ReAct agent wraps retrieval as one tool among several and decides
+which to call:
+
+- **Tools:** `rag_search` (the Phase 1 pipeline), `calculator` (safe arithmetic),
+  `list_doc_topics` (corpus coverage).
+- **Orchestration:** an explicit `StateGraph` (agent ⇄ ToolNode) — multi-tool
+  questions are handled in one turn (e.g. "what is a checkpointer, and what is 12×9?").
+- **Guardrails:** max tool rounds, graceful tool-error handling, input validation,
+  and a prompt-injection rule (it refuses to leak its prompt / follow injected instructions).
+- **Eval:** tool-selection accuracy **0.917**, required-tool recall **1.000** over a
+  labelled set — see [ai/eval/results/agent_eval.md](ai/eval/results/agent_eval.md).
+- **Tracing:** every agent run is a multi-step Langfuse trace (LLM steps + each tool call, in order).
+
 ## Status
 
 - **Phase 0 — Foundation:** ✅ complete
 - **Phase 1 — RAG core + Eval (flagship):** ✅ complete (eval table proves hybrid+rerank > baseline)
-- **Phase 2 — Agent layer (LangGraph tools + guardrails):** next
+- **Phase 2 — Agent layer (LangGraph tools + guardrails):** ✅ complete
+- **Phase 3 — Production polish (streaming, caching, deploy):** optional / next

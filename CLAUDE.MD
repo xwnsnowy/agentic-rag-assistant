@@ -43,7 +43,7 @@ layer. Do not collapse the Python layer into TS.
 - Agent orchestration: LangGraph (Python)
 - Frontend streaming: Vercel AI SDK
 
-## Build phases (current status: Phase 0 COMPLETE — Neon DB round-trip works; LangGraph v1.0 corpus downloaded (12 docs). Next: Phase 1)
+## Build phases (current status: Phase 0, 1, 2 COMPLETE. Phase 1 eval proves hybrid+rerank > baseline; Phase 2 LangGraph agent picks tools at 0.917 accuracy with guardrails. Next: Phase 3 polish, optional.)
 
 - **Phase 0 — Foundation.** Scaffold `web/` and `ai/`, enable pgvector, create the `chunks`
   table, get one chunk inserted + cosine-similarity query working, and a Next.js -> FastAPI
@@ -117,6 +117,8 @@ is the first place to look for how to run anything.
 - fetch corpus: `cd ai && python -m scripts.fetch_corpus` (LangGraph v1.0 docs -> data/raw/ + manifest.json; pinned tag 1.0.10)
 - eval: `cd ai && python -m scripts.run_eval --judge` (compares keyword/baseline/hybrid/hybrid+rerank; `--judge` adds faithfulness/relevancy via LLM, traced to Langfuse)
 - ask (RAG): `cd ai && python -m scripts.ask "<question>" --config hybrid+rerank`
+- agent ask: `cd ai && python -m scripts.agent_ask "<question>"` (LangGraph agent picks tools: rag_search/calculator/list_doc_topics)
+- agent eval: `cd ai && python -m scripts.run_agent_eval` (tool-selection accuracy over eval/agent_dataset.json)
 - ingest corpus: `cd ai && python -m scripts.ingest` (chunk -> embed -> upsert; re-runnable)
 - lint/format: _(TODO once configured)_
 
