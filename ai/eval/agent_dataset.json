@@ -1,0 +1,20 @@
+{
+  "meta": {
+    "purpose": "Agent tool-selection eval. expected_tools = the tool(s) the agent should call; [] means it should answer without any tool.",
+    "tools": ["rag_search", "calculator", "list_doc_topics"]
+  },
+  "items": [
+    { "id": "ag-01", "question": "What is a StateGraph in LangGraph?", "expected_tools": ["rag_search"] },
+    { "id": "ag-02", "question": "How do I add short-term memory with a checkpointer?", "expected_tools": ["rag_search"] },
+    { "id": "ag-03", "question": "What is the difference between a conditional edge and a normal edge?", "expected_tools": ["rag_search"] },
+    { "id": "ag-04", "question": "How does a reducer work in LangGraph state?", "expected_tools": ["rag_search"] },
+    { "id": "ag-05", "question": "What is 144 divided by 12?", "expected_tools": ["calculator"] },
+    { "id": "ag-06", "question": "Compute (5 + 3) * 7.", "expected_tools": ["calculator"] },
+    { "id": "ag-07", "question": "What is 2 to the power of 10?", "expected_tools": ["calculator"] },
+    { "id": "ag-08", "question": "What topics can you answer questions about?", "expected_tools": ["list_doc_topics"] },
+    { "id": "ag-09", "question": "Which LangGraph documentation pages do you have access to?", "expected_tools": ["list_doc_topics"] },
+    { "id": "ag-10", "question": "What is a checkpointer, and also what is 12 * 9?", "expected_tools": ["rag_search", "calculator"] },
+    { "id": "ag-11", "question": "Hello! Who are you and what can you do?", "expected_tools": [] },
+    { "id": "ag-12", "question": "Thanks, that was helpful!", "expected_tools": [] }
+  ]
+}

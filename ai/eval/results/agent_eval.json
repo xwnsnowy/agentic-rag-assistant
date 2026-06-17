@@ -1,0 +1,159 @@
+{
+  "n": 12,
+  "tool_selection_exact": 0.9166666666666666,
+  "required_tool_recall": 1.0,
+  "rows": [
+    {
+      "id": "ag-01",
+      "expected": [
+        "rag_search"
+      ],
+      "used": [
+        "rag_search"
+      ],
+      "exact": true,
+      "recall": true,
+      "latency_ms": 8047,
+      "error": null
+    },
+    {
+      "id": "ag-02",
+      "expected": [
+        "rag_search"
+      ],
+      "used": [
+        "rag_search"
+      ],
+      "exact": true,
+      "recall": true,
+      "latency_ms": 8137,
+      "error": null
+    },
+    {
+      "id": "ag-03",
+      "expected": [
+        "rag_search"
+      ],
+      "used": [
+        "rag_search"
+      ],
+      "exact": true,
+      "recall": true,
+      "latency_ms": 6160,
+      "error": null
+    },
+    {
+      "id": "ag-04",
+      "expected": [
+        "rag_search"
+      ],
+      "used": [
+        "rag_search"
+      ],
+      "exact": true,
+      "recall": true,
+      "latency_ms": 7949,
+      "error": null
+    },
+    {
+      "id": "ag-05",
+      "expected": [
+        "calculator"
+      ],
+      "used": [
+        "calculator"
+      ],
+      "exact": true,
+      "recall": true,
+      "latency_ms": 1636,
+      "error": null
+    },
+    {
+      "id": "ag-06",
+      "expected": [
+        "calculator"
+      ],
+      "used": [
+        "calculator"
+      ],
+      "exact": true,
+      "recall": true,
+      "latency_ms": 2797,
+      "error": null
+    },
+    {
+      "id": "ag-07",
+      "expected": [
+        "calculator"
+      ],
+      "used": [
+        "calculator"
+      ],
+      "exact": true,
+      "recall": true,
+      "latency_ms": 1845,
+      "error": null
+    },
+    {
+      "id": "ag-08",
+      "expected": [
+        "list_doc_topics"
+      ],
+      "used": [
+        "list_doc_topics"
+      ],
+      "exact": true,
+      "recall": true,
+      "latency_ms": 2877,
+      "error": null
+    },
+    {
+      "id": "ag-09",
+      "expected": [
+        "list_doc_topics"
+      ],
+      "used": [
+        "list_doc_topics"
+      ],
+      "exact": true,
+      "recall": true,
+      "latency_ms": 2243,
+      "error": null
+    },
+    {
+      "id": "ag-10",
+      "expected": [
+        "calculator",
+        "rag_search"
+      ],
+      "used": [
+        "calculator",
+        "rag_search"
+      ],
+      "exact": true,
+      "recall": true,
+      "latency_ms": 7135,
+      "error": null
+    },
+    {
+      "id": "ag-11",
+      "expected": [],
+      "used": [
+        "list_doc_topics"
+      ],
+      "exact": false,
+      "recall": true,
+      "latency_ms": 3084,
+      "error": null
+    },
+    {
+      "id": "ag-12",
+      "expected": [],
+      "used": [],
+      "exact": true,
+      "recall": true,
+      "latency_ms": 802,
+      "error": null
+    }
+  ]
+}
