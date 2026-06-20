@@ -28,21 +28,28 @@ def rerank(query: str, results: list[Result], top_k: int = 5) -> list[Result]:
     if not settings.cohere_api_key:
         return results[:top_k]  # passthrough when no key
 
-    resp = _post_with_backoff(
-        settings,
-        {
-            "model": settings.rerank_model,
-            "query": query,
-            "documents": [r.content for r in results],
-            "top_n": top_k,
-        },
-    )
-    out: list[Result] = []
-    for item in resp.json()["results"]:
-        r = results[item["index"]]
-        r.rerank_score = float(item["relevance_score"])
-        out.append(r)
-    return out
+    # Reranking is a best-effort enhancement. If Cohere is unavailable (bad key,
+    # rate limit, outage), degrade to the input (hybrid) order instead of failing
+    # the whole request.
+    try:
+        resp = _post_with_backoff(
+            settings,
+            {
+                "model": settings.rerank_model,
+                "query": query,
+                "documents": [r.content for r in results],
+                "top_n": top_k,
+            },
+        )
+        out: list[Result] = []
+        for item in resp.json()["results"]:
+            r = results[item["index"]]
+            r.rerank_score = float(item["relevance_score"])
+            out.append(r)
+        return out
+    except Exception as exc:  # noqa: BLE001 - degrade gracefully
+        print(f"[rerank] Cohere unavailable, falling back to hybrid order: {type(exc).__name__}")
+        return results[:top_k]
 
 
 def _post_with_backoff(settings, payload: dict) -> httpx.Response:
