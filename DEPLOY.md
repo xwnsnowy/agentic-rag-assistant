@@ -16,8 +16,8 @@ Use the **pooled** connection string for `DATABASE_URL`.
 
 ## 2. AI service — Render
 
-1. New → **Blueprint**, point at this repo. Render reads [ai/render.yaml](ai/render.yaml)
-   (Root Directory `ai/`, native Python, start `uvicorn app.main:app --host 0.0.0.0 --port $PORT`).
+1. New → **Blueprint**, point at this repo. Render reads [render.yaml](render.yaml) at the
+   repo root (it sets `rootDir: ai`, native Python, start `uvicorn app.main:app --host 0.0.0.0 --port $PORT`).
 2. Fill the `sync:false` env vars in the dashboard: `DATABASE_URL`, `EMBEDDING_API_KEY`,
    `OPENROUTER_API_KEY`, `COHERE_API_KEY`, `LANGFUSE_*`, and `CORS_ORIGINS`
    (your Vercel URL, e.g. `https://your-app.vercel.app`).
