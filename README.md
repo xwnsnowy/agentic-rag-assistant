@@ -1,5 +1,9 @@
 # Agentic RAG Assistant — LangGraph docs
 
+**Live demo: https://agentic-rag-assistant.vercel.app**
+&nbsp;·&nbsp; web on Vercel, API on Render, Postgres+pgvector on Neon.
+_(Free tier: the first request may take ~60s while the API cold-starts.)_
+
 A retrieval-augmented assistant that answers questions about the **LangGraph v1.0**
 documentation, built to demonstrate AI-engineering depth: retrieval engineering,
 **evaluation with real numbers**, grounded generation with citations, and
