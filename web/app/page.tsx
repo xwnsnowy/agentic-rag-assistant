@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { BarChart3 } from "lucide-react";
 import {
   ArrowUpRight,
   BookOpen,
@@ -106,6 +108,14 @@ export default function Home() {
             <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
             live
           </span>
+          <Link
+            href="/eval"
+            className="inline-flex size-9 items-center justify-center rounded-md border bg-card text-muted-foreground shadow-sm transition-colors hover:text-foreground"
+            aria-label="Eval dashboard"
+            title="Eval dashboard"
+          >
+            <BarChart3 className="size-4" />
+          </Link>
           <ThemeToggle />
         </div>
       </header>
