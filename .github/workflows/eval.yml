@@ -1,0 +1,36 @@
+name: Eval (regression gate)
+
+# Manual run — the eval needs the DB + an LLM key, set as repo Secrets:
+#   DATABASE_URL, EMBEDDING_API_KEY (OpenAI; reused for the LLM too).
+# Run from the Actions tab. Extend with a metric-threshold check to fail PRs on
+# regressions (e.g. assert hybrid+rerank MRR stays above a floor).
+on:
+  workflow_dispatch:
+
+jobs:
+  eval:
+    name: ai · run_eval --judge
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ai
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      EMBEDDING_API_KEY: ${{ secrets.EMBEDDING_API_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.EMBEDDING_API_KEY }}
+      OPENROUTER_BASE: https://api.openai.com/v1
+      LLM_MODEL: gpt-4o-mini
+      COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python -m scripts.run_eval --judge
+      - run: python -m scripts.run_agent_eval
+      - run: python -m scripts.run_injection_eval
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: ai/eval/results/
