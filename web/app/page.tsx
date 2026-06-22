@@ -1,18 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { BarChart3 } from "lucide-react";
 import {
   ArrowUpRight,
+  BarChart3,
   BookOpen,
   Calculator,
   FolderTree,
+  Loader2,
   Network,
   Plus,
   Send,
 } from "lucide-react";
-import { ask, runAgent, type Citation } from "@/lib/api";
+import { API_URL, ask, runAgent, type Citation } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Markdown } from "@/components/markdown";
@@ -51,6 +52,27 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [threadId, setThreadId] = useState<string>("");
+  const [slow, setSlow] = useState(false);
+  const slowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Pre-warm the API on load so the first question isn't stuck behind a ~40s
+  // cold start (Render free tier spins down when idle).
+  useEffect(() => {
+    fetch(`${API_URL}/health`, { cache: "no-store" }).catch(() => {});
+  }, []);
+
+  // After a few seconds of waiting, hint that the free-tier server may be waking up.
+  useEffect(() => {
+    if (loading) {
+      slowTimer.current = setTimeout(() => setSlow(true), 4500);
+    } else {
+      setSlow(false);
+      if (slowTimer.current) clearTimeout(slowTimer.current);
+    }
+    return () => {
+      if (slowTimer.current) clearTimeout(slowTimer.current);
+    };
+  }, [loading]);
 
   function newChat() {
     setThreadId(typeof crypto !== "undefined" ? crypto.randomUUID() : String(Date.now()));
@@ -195,6 +217,24 @@ export default function Home() {
           <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
             {error}
           </p>
+        )}
+
+        {loading && (
+          <div className="flex items-start gap-3">
+            <div className="grid size-7 flex-none place-items-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow shadow-indigo-500/30">
+              <Network className="size-3.5" />
+            </div>
+            <div className="flex items-center gap-2.5 rounded-2xl border bg-card px-4 py-3 shadow-sm">
+              <Loader2 className="size-4 animate-spin text-primary" />
+              <span className="text-sm text-muted-foreground">
+                {slow
+                  ? "Waking up the server — free tier, first request can take ~40s…"
+                  : mode === "agent"
+                    ? "Agent is thinking…"
+                    : "Searching the docs…"}
+              </span>
+            </div>
+          </div>
         )}
 
         {turns.map((t, i) => (

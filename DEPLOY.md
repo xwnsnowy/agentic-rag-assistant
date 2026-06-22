@@ -39,6 +39,22 @@ Use the **pooled** connection string for `DATABASE_URL`.
 - [ ] `NEXT_PUBLIC_API_URL` on Vercel = the Render URL
 - [ ] Open the Vercel URL, ask a question in both RAG and Agent modes
 
+## Keep the API warm (avoid the ~40s cold start)
+
+Render's free tier spins the API down after ~15 min idle, so the first request
+then takes ~40s. Two mitigations are in place + recommended:
+
+1. **Frontend pre-warm** — the web app pings `/health` on page load, so the API
+   is usually awake by the time the visitor types a question. The chat also shows
+   a "waking up the server…" message if a request runs long (no blank wait).
+2. **External uptime pinger (recommended, most reliable):** create a free
+   [UptimeRobot](https://uptimerobot.com) HTTP monitor on
+   `https://agentic-rag-ai-fspt.onrender.com/health`, interval **5 minutes**. This
+   keeps the instance warm 24/7. (A `keep-warm` GitHub Action also exists, but
+   GitHub disables scheduled workflows on inactive repos and cron timing is loose —
+   UptimeRobot is steadier.)
+3. Or upgrade the Render instance to a paid plan (always-on).
+
 ## Notes
 
 - Keep `main` deployable; do WIP on branches (preview deploys on both platforms).
