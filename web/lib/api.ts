@@ -51,13 +51,17 @@ export type AgentResponse = {
   answer: string;
   tools_used: string[];
   rounds: number;
+  thread_id: string;
 };
 
-export async function runAgent(question: string): Promise<AgentResponse> {
+export async function runAgent(
+  question: string,
+  threadId?: string,
+): Promise<AgentResponse> {
   const res = await fetch(`${API_URL}/agent`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question }),
+    body: JSON.stringify({ question, thread_id: threadId }),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();

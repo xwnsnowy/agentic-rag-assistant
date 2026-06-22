@@ -7,6 +7,7 @@ import {
   Calculator,
   FolderTree,
   Network,
+  Plus,
   Send,
 } from "lucide-react";
 import { ask, runAgent, type Citation } from "@/lib/api";
@@ -47,6 +48,13 @@ export default function Home() {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [threadId, setThreadId] = useState<string>("");
+
+  function newChat() {
+    setThreadId(typeof crypto !== "undefined" ? crypto.randomUUID() : String(Date.now()));
+    setTurns([]);
+    setError(null);
+  }
 
   async function send(q: string) {
     if (!q.trim() || loading) return;
@@ -55,7 +63,9 @@ export default function Home() {
     setLoading(true);
     try {
       if (mode === "agent") {
-        const res = await runAgent(q);
+        const tid = threadId || (typeof crypto !== "undefined" ? crypto.randomUUID() : String(Date.now()));
+        const res = await runAgent(q, tid);
+        setThreadId(res.thread_id || tid);
         setTurns((t) => [
           { question: q, label: "agent", answer: res.answer, citations: [], toolsUsed: res.tools_used },
           ...t,
@@ -134,9 +144,21 @@ export default function Home() {
             </select>
           </label>
         ) : (
-          <span className="text-xs text-muted-foreground/70">
-            {loading ? "choosing tools…" : "agent decides which tools to use"}
-          </span>
+          <div className="flex items-center gap-2.5">
+            <span className="hidden text-xs text-muted-foreground/70 sm:inline">
+              {loading ? "choosing tools…" : "remembers context across turns"}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={newChat}
+              disabled={turns.length === 0 && !threadId}
+              className="gap-1.5"
+            >
+              <Plus className="size-3.5" />
+              New chat
+            </Button>
+          </div>
         )}
       </div>
 

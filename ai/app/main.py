@@ -74,15 +74,20 @@ def ask(req: AskRequest):
 
 class AgentRequest(BaseModel):
     question: str
+    thread_id: str | None = None  # pass to keep short-term memory across turns
 
 
 @app.post("/agent")
 def agent_endpoint(req: AgentRequest):
-    """Run the LangGraph agent: it picks tools (rag_search/calculator/topics)."""
-    res = run_agent(req.question)
+    """Run the LangGraph agent: it picks tools (rag_search/calculator/topics).
+
+    Pass a stable thread_id to enable multi-turn memory (follow-up questions).
+    """
+    res = run_agent(req.question, thread_id=req.thread_id)
     return {
         "question": req.question,
         "answer": res.answer,
         "tools_used": res.tools_used,
         "rounds": res.rounds,
+        "thread_id": res.thread_id,
     }

@@ -16,9 +16,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from functools import lru_cache
 from typing import Annotated, TypedDict
+from uuid import uuid4
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from langchain_openai import ChatOpenAI
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
@@ -54,6 +56,12 @@ class AgentResult:
     answer: str
     tools_used: list[str] = field(default_factory=list)  # in call order
     rounds: int = 0
+    thread_id: str = ""
+
+
+# Short-term memory across turns. MemorySaver is process-local (fine for the
+# single Render instance / demo); PostgresSaver is the production swap-in.
+_checkpointer = MemorySaver()
 
 
 @lru_cache
@@ -86,15 +94,18 @@ def _graph():
     g.add_edge(START, "agent")
     g.add_conditional_edges("agent", route, {"tools": "tools", END: END})
     g.add_edge("tools", "agent")
-    return g.compile()
+    return g.compile(checkpointer=_checkpointer)
 
 
-def run_agent(question: str) -> AgentResult:
+def run_agent(question: str, thread_id: str | None = None) -> AgentResult:
+    # A stable thread_id keeps short-term memory across turns; without one we use
+    # a fresh ephemeral id so the call is stateless.
+    tid = thread_id or f"ephemeral-{uuid4().hex}"
     q = (question or "").strip()
     if not q:
-        return AgentResult(answer="Please ask a question.")
+        return AgentResult(answer="Please ask a question.", thread_id=tid)
     if len(q) > MAX_QUESTION_CHARS:
-        return AgentResult(answer="Your question is too long; please shorten it.")
+        return AgentResult(answer="Your question is too long; please shorten it.", thread_id=tid)
 
     callbacks = []
     if obs.init():
@@ -107,19 +118,30 @@ def run_agent(question: str) -> AgentResult:
 
     state = _graph().invoke(
         {"messages": [HumanMessage(content=q)]},
-        config={"recursion_limit": 2 * MAX_TOOL_ROUNDS + 2, "callbacks": callbacks},
+        config={
+            "configurable": {"thread_id": tid},
+            "recursion_limit": 2 * MAX_TOOL_ROUNDS + 2,
+            "callbacks": callbacks,
+        },
     )
+
+    # With a checkpointer the state holds the WHOLE thread; isolate this turn
+    # (messages after the last human message) so badges reflect only this answer.
+    msgs = state["messages"]
+    last_human = max(
+        (i for i, m in enumerate(msgs) if isinstance(m, HumanMessage)), default=-1
+    )
+    turn = msgs[last_human + 1 :]
 
     tools_used = [
         tc["name"]
-        for m in state["messages"]
+        for m in turn
         if isinstance(m, AIMessage) and m.tool_calls
         for tc in m.tool_calls
     ]
-    rounds = sum(1 for m in state["messages"] if isinstance(m, AIMessage) and m.tool_calls)
+    rounds = sum(1 for m in turn if isinstance(m, AIMessage) and m.tool_calls)
     answer = next(
-        (m.content for m in reversed(state["messages"])
-         if isinstance(m, AIMessage) and m.content),
+        (m.content for m in reversed(turn) if isinstance(m, AIMessage) and m.content),
         "I couldn't produce an answer.",
     )
-    return AgentResult(answer=answer, tools_used=tools_used, rounds=rounds)
+    return AgentResult(answer=answer, tools_used=tools_used, rounds=rounds, thread_id=tid)
