@@ -67,6 +67,60 @@ tool rounds, tool-error recovery, input validation, and prompt-injection resista
 (measured 1.000 over 8 attacks). It also has **multi-turn memory** via a LangGraph
 checkpointer — built with the very mechanism the docs describe.
 
+## Q: Why pgvector (Postgres) instead of a dedicated vector DB (Pinecone/Weaviate/Qdrant)?
+
+- **One source of truth.** Vectors, metadata (`jsonb`), and the keyword index
+  (`tsvector`) live in the **same database** as the relational data (documents, chat
+  logs). No sync pipeline between two systems, no consistency drift, one connection.
+- **Hybrid search needs both halves together.** Fusing pgvector similarity with Postgres
+  full-text is one query in one DB — not a cross-system join.
+- **It's enough.** HNSW indexing scales well past this corpus; a specialised vector DB
+  adds infra, cost, and a sync job you only need at very large scale.
+- Honest: at massive scale (billions of vectors, heavy metadata filtering) a dedicated
+  engine may win. For app-sized RAG, Postgres+pgvector is simpler and sufficient — *don't
+  add a system you don't need yet.*
+
+## Q: Why chunk by heading/section instead of fixed-size?
+
+- **Semantic units, not arbitrary cuts.** A heading + its content is one coherent idea.
+  Fixed-size splitting cuts mid-sentence — broken context hurts both retrieval and the
+  answer.
+- **Never split a code block.** The corpus is code-heavy; half a snippet teaches nothing.
+  Heading-based chunking keeps the heading and its code together (with a size cap that
+  packs whole blocks, never splitting fenced code).
+- **Citations fall out for free.** Page title, section breadcrumb, source URL, and anchor
+  attach per section → precise, linkable citations.
+- Tradeoff: variable chunk sizes. Worth it vs. the cost of broken context.
+
+## Q: Why pin the corpus to LangGraph v1.0 (tag 1.0.10)?
+
+AI libraries move fast and a plausible answer can be wrong for your version. Pinning makes
+answers **reproducible and verifiable** against a fixed reference, and makes eval
+**comparable over time** (same tag → same corpus). It's also how the eval caught a
+version-drift bug in a ground-truth answer.
+
+## Q: Why two languages (TypeScript + Python)?
+
+A deliberate production split: **TS/Next.js for the app** (UI, auth, chat history),
+**Python for the AI/eval layer** — because the ecosystem (LangGraph, Ragas, embeddings)
+lives in Python. It mirrors how real teams are organised; forcing the AI layer into TS
+would fight the tooling.
+
+## Q: Why gpt-4o-mini, not a frontier model?
+
+That's the point of RAG: **retrieval supplies the facts, so a small model answers
+accurately when grounded** — faithfulness 0.92 with gpt-4o-mini proves it, at cents for
+the whole eval. The lever is good retrieval + citations, not model size. Swapping in a
+bigger model is a one-line config change if a task ever needs it.
+
+## Q: Why both a custom LLM-judge AND Ragas for evaluation?
+
+Retrieval metrics (hit@k / MRR / precision) are deterministic from labels. But "is this
+answer grounded and relevant?" needs judgment → **LLM-as-judge**. **Ragas** is the standard
+library for the same metrics, so running both **corroborates** the numbers (independent
+check) and using the recognised tool is a credibility signal — they agreed closely on
+faithfulness and context-precision.
+
 ## Q: What are the limitations? (don't dodge this)
 
 - **Cohere trial key expired** → the live demo's rerank degrades to hybrid (the eval table
