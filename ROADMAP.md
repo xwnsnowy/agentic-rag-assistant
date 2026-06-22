@@ -11,6 +11,8 @@ What's been built beyond the core phases, and what's queued. Core phases live in
 | **UX** | **shadcn/ui** + **light/dark theme toggle** (next-themes) | `web/components/`, `web/app/` |
 | **RAG** | **Query rewriting** (rewrite-retrieve-read) config `hybrid+rerank+rewrite` | `ai/app/query_rewrite.py` |
 | **RAG** | **Semantic answer cache** — repeat/near-dup question ~8.5s → ~0.65s (13×) | `ai/app/cache.py` |
+| **Agent** | **Multi-turn memory** via LangGraph checkpointer (thread_id) — follow-ups resolve ("can I use *it* with Postgres?") | `ai/app/agent.py` |
+| **UX** | **In-app eval dashboard** at `/eval` — metrics visible without reading the repo | `web/app/eval/` |
 | **Safety** | **Prompt-injection eval** — 8 attacks, resistance **1.000** | `ai/eval/injection_*` |
 | **Resilience** | Rerank **degrades to hybrid** on Cohere failure (no 500) | `ai/app/rerank.py` |
 | **Ops** | **GitHub Actions**: CI (web build + ai syntax), gated eval regression job, keep-warm cron | `.github/workflows/` |
@@ -26,8 +28,8 @@ python -m scripts.run_injection_eval      # prompt-injection resistance
 ## 🔜 Queued — high signal
 
 - **Corrective-RAG (CRAG):** grade retrieved docs, re-retrieve / widen when low quality.
-- **Conversational memory (multi-turn):** persist threads via a LangGraph checkpointer
-  (strong meta-angle — the very mechanism the docs describe); pass `thread_id` through API + UI.
+- **Persist multi-turn threads in Postgres:** swap `MemorySaver` for `PostgresSaver`
+  (memory currently in-process; survives restarts once persisted).
 - **Embedding-model ablation:** `text-embedding-3-small` vs `-large` vs Voyage/Cohere — comparison table.
 - **chunk-size / top-k ablation:** sweep params, pick the optimum by the eval.
 - **Streaming UX:** token streaming + live "agent is using tool X" (Vercel AI SDK / SSE).
