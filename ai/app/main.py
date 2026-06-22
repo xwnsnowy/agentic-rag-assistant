@@ -63,7 +63,7 @@ class AskRequest(BaseModel):
 def ask(req: AskRequest):
     """Answer a question with the RAG pipeline. Sync def -> runs in a threadpool."""
     cfg = _CONFIG_BY_NAME.get(req.config, HYBRID_RERANK)
-    ans = answer_question(req.question, cfg)
+    ans = answer_question(req.question, cfg, use_cache=True)
     return {
         "question": req.question,
         "config": cfg.name,

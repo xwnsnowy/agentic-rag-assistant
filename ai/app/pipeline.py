@@ -51,5 +51,17 @@ def retrieve(query: str, cfg: RagConfig) -> list[Result]:
     return results[: cfg.k]
 
 
-def answer_question(query: str, cfg: RagConfig = HYBRID_RERANK) -> Answer:
+def answer_question(
+    query: str, cfg: RagConfig = HYBRID_RERANK, *, use_cache: bool = False
+) -> Answer:
+    if use_cache:
+        from app import cache
+
+        hit = cache.get(query)
+        if hit is not None:
+            return hit
+        ans = generate(query, retrieve(query, cfg))
+        if ans.text:
+            cache.put(query, ans)
+        return ans
     return generate(query, retrieve(query, cfg))
