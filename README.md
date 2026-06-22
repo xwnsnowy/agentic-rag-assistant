@@ -9,6 +9,10 @@ documentation, built to demonstrate AI-engineering depth: retrieval engineering,
 **evaluation with real numbers**, grounded generation with citations, and
 observability — not just "calling an LLM API".
 
+> **Why RAG over just asking ChatGPT?** Grounding, citations, version pinning,
+> knowing-when-it-doesn't-know, and measurability — and the technique transfers to
+> private data ChatGPT never saw. Full rationale + FAQ: **[RATIONALE.md](RATIONALE.md)**.
+
 > Meta-angle: the app answers questions *about* LangGraph, and the agent layer
 > (Phase 2) is built *with* LangGraph.
 
