@@ -12,6 +12,7 @@ import {
 import { ask, runAgent, type Citation } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Markdown } from "@/components/markdown";
 import { cn } from "@/lib/utils";
 
 type Mode = "agent" | "rag";
@@ -201,8 +202,8 @@ export default function Home() {
                     })}
                   </div>
                 )}
-                <div className="prose-answer whitespace-pre-wrap rounded-2xl border bg-card p-4 text-[14.5px] leading-relaxed shadow-sm">
-                  {t.answer ?? "(no answer)"}
+                <div className="rounded-2xl border bg-card p-4 shadow-sm">
+                  {t.answer ? <Markdown>{t.answer}</Markdown> : "(no answer)"}
                 </div>
                 {t.citations.length > 0 && (
                   <ul className="mt-3.5 flex flex-col gap-2 border-t border-dashed pt-3.5">
