@@ -14,6 +14,7 @@
 | 2 — Agent layer | ✅ | LangGraph agent, tool-selection 0.917, guardrails |
 | 2.5 — Agent trong web UI | ✅ | toggle RAG⇄Agent + badge tool |
 | 3 — Deploy production | ✅ | live end-to-end, CORS thông |
+| 3+ — Expansions | ✅ | shadcn UI + dark mode, Markdown render, query-rewrite, semantic cache (13×), injection eval (1.000), CI/CD — xem [ROADMAP.md](ROADMAP.md) |
 
 ---
 

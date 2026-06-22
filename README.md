@@ -122,5 +122,8 @@ which to call:
 - **Phase 0 — Foundation:** ✅ complete
 - **Phase 1 — RAG core + Eval (flagship):** ✅ complete (eval table proves hybrid+rerank > baseline)
 - **Phase 2 — Agent layer (LangGraph tools + guardrails):** ✅ complete
-- **Phase 3 — Production polish:** deploy-ready (see **[DEPLOY.md](DEPLOY.md)** —
-  Vercel + Render + Neon, no Docker); streaming/caching/auth optional
+- **Phase 3 — Production polish:** deployed live (see **[DEPLOY.md](DEPLOY.md)** —
+  Vercel + Render + Neon, no Docker)
+- **Expansions:** shadcn/ui + light/dark theme, Markdown answers, query-rewriting,
+  semantic cache (13× on repeats), prompt-injection eval (1.000), GitHub Actions
+  CI/eval/keep-warm — full list in **[ROADMAP.md](ROADMAP.md)**

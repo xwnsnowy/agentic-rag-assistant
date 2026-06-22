@@ -6,8 +6,14 @@ Reproducible comparison of retrieval configs over the golden dataset
 ```bash
 cd ai
 python -m scripts.run_eval            # retrieval metrics only
-python -m scripts.run_eval --judge    # + faithfulness/relevancy/abstention (LLM)
+python -m scripts.run_eval --judge    # + faithfulness/relevancy/context/neg (LLM)
+python -m scripts.run_agent_eval      # agent tool-selection accuracy
+python -m scripts.run_injection_eval  # agent prompt-injection resistance (8 attacks -> 1.000)
 ```
+
+`run_eval` compares 4 retrieval configs including `hybrid+rerank+rewrite`
+(query-rewriting). See [../../ROADMAP.md](../../ROADMAP.md) for the full list of
+shipped expansions.
 
 ## Metrics
 
