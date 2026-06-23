@@ -27,7 +27,9 @@ observability — not just "calling an LLM API".
   the corpus can't answer.
 - Measures everything: retrieval (hit@k / MRR / precision@k), generation
   (faithfulness / answer-relevancy via LLM-as-judge), and **cost + latency per
-  request in Langfuse**.
+  request in Langfuse** — surfaced in an **in-app eval dashboard at `/eval`**
+  (retrieval comparison, Ragas, agent tool-selection, injection resistance, cache
+  speed-up) so the numbers are visible without reading the repo.
 
 ## Results (headline)
 
@@ -102,7 +104,7 @@ pnpm dev        # http://localhost:3000
 - `ai/app/` — config, db, embeddings, chunking, retrieval, rerank, generation, pipeline
 - `ai/eval/` — metrics, LLM-judge, harness, **results + write-up**
 - `ai/scripts/` — init_db, fetch_corpus, ingest, ask, run_eval, search
-- `web/` — Next.js chat UI
+- `web/` — Next.js chat UI (`/` chat with multi-turn memory, `/eval` metrics dashboard)
 - `golden_dataset_langgraph.json` — eval golden dataset (questions + ground truth + expected sources)
 - `Agentic_RAG_Build_Plan.md` / `PHASE_0.md` — phased plan and progress
 
@@ -115,6 +117,9 @@ which to call:
   `list_doc_topics` (corpus coverage).
 - **Orchestration:** an explicit `StateGraph` (agent ⇄ ToolNode) — multi-tool
   questions are handled in one turn (e.g. "what is a checkpointer, and what is 12×9?").
+- **Multi-turn memory:** a LangGraph checkpointer (`MemorySaver` + per-conversation
+  `thread_id`) so follow-ups resolve context ("can I use *it* with Postgres?"); the UI
+  has a "New chat" button to start a fresh thread.
 - **Guardrails:** max tool rounds, graceful tool-error handling, input validation,
   and a prompt-injection rule (it refuses to leak its prompt / follow injected instructions).
 - **Eval:** tool-selection accuracy **0.917**, required-tool recall **1.000** over a
@@ -128,6 +133,7 @@ which to call:
 - **Phase 2 — Agent layer (LangGraph tools + guardrails):** ✅ complete
 - **Phase 3 — Production polish:** deployed live (see **[DEPLOY.md](DEPLOY.md)** —
   Vercel + Render + Neon, no Docker)
-- **Expansions:** shadcn/ui + light/dark theme, Markdown answers, query-rewriting,
-  semantic cache (13× on repeats), prompt-injection eval (1.000), GitHub Actions
-  CI/eval/keep-warm — full list in **[ROADMAP.md](ROADMAP.md)**
+- **Expansions:** shadcn/ui + light/dark theme, Markdown answers, multi-turn agent
+  memory, in-app eval dashboard (`/eval`), query-rewriting, semantic cache (13× on
+  repeats), prompt-injection eval (1.000), GitHub Actions CI/eval/keep-warm — full
+  list in **[ROADMAP.md](ROADMAP.md)**
