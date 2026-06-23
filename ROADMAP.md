@@ -13,6 +13,7 @@ What's been built beyond the core phases, and what's queued. Core phases live in
 | **RAG** | **Semantic answer cache** — repeat/near-dup question ~8.5s → ~0.65s (13×) | `ai/app/cache.py` |
 | **Agent** | **Multi-turn memory** via LangGraph checkpointer (thread_id) — follow-ups resolve ("can I use *it* with Postgres?") | `ai/app/agent.py` |
 | **UX** | **In-app eval dashboard** at `/eval` — metrics visible without reading the repo | `web/app/eval/` |
+| **Agent** | **MCP server** — the agent's tools (rag_search/calculator/list_doc_topics) published over the Model Context Protocol for external clients | `ai/app/mcp_server.py` |
 | **Safety** | **Prompt-injection eval** — 8 attacks, resistance **1.000** | `ai/eval/injection_*` |
 | **Resilience** | Rerank **degrades to hybrid** on Cohere failure (no 500) | `ai/app/rerank.py` |
 | **Ops** | **GitHub Actions**: CI (web build + ai syntax), gated eval regression job, keep-warm cron | `.github/workflows/` |

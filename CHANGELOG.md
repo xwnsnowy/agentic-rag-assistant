@@ -3,6 +3,10 @@
 ## 2026-06-23
 
 ### Added
+- **MCP server** (`ai/app/mcp_server.py`) — the agent's three tools (rag_search /
+  calculator / list_doc_topics) published over the Model Context Protocol (stdio), reusing
+  `app.tools` so the internal-agent and external-client surfaces can't drift. Run:
+  `cd ai && python -m app.mcp_server`.
 - **shadcn/ui + light/dark theme toggle** (next-themes) — chat UI rebuilt on shadcn
   primitives; Markdown rendering for answers (code blocks, lists, links).
 - **Multi-turn memory** for the agent via a LangGraph checkpointer (`thread_id`,

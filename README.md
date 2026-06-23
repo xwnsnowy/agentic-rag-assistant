@@ -125,6 +125,10 @@ which to call:
 - **Eval:** tool-selection accuracy **0.917**, required-tool recall **1.000** over a
   labelled set — see [ai/eval/results/agent_eval.md](ai/eval/results/agent_eval.md).
 - **Tracing:** every agent run is a multi-step Langfuse trace (LLM steps + each tool call, in order).
+- **MCP server:** the same three tools are also published over the **Model Context
+  Protocol** (`ai/app/mcp_server.py`) — one tool implementation, two front doors
+  (internal LangGraph agent + any external MCP client like Claude Desktop). Run with
+  `cd ai && python -m app.mcp_server`.
 
 ## Status
 
@@ -134,6 +138,6 @@ which to call:
 - **Phase 3 — Production polish:** deployed live (see **[DEPLOY.md](DEPLOY.md)** —
   Vercel + Render + Neon, no Docker)
 - **Expansions:** shadcn/ui + light/dark theme, Markdown answers, multi-turn agent
-  memory, in-app eval dashboard (`/eval`), query-rewriting, semantic cache (13× on
-  repeats), prompt-injection eval (1.000), GitHub Actions CI/eval/keep-warm — full
-  list in **[ROADMAP.md](ROADMAP.md)**
+  memory, in-app eval dashboard (`/eval`), MCP server for the agent tools, query-rewriting,
+  semantic cache (13× on repeats), prompt-injection eval (1.000), GitHub Actions
+  CI/eval/keep-warm — full list in **[ROADMAP.md](ROADMAP.md)**

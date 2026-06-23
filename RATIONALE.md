@@ -67,6 +67,32 @@ tool rounds, tool-error recovery, input validation, and prompt-injection resista
 (measured 1.000 over 8 attacks). It also has **multi-turn memory** via a LangGraph
 checkpointer — built with the very mechanism the docs describe.
 
+## Q: Why LangGraph and not LlamaIndex (or LangChain alone)?
+
+They solve different layers, and I picked per layer rather than adopting one framework
+end-to-end:
+
+- **Retrieval layer:** I wrote it directly (chunking, pgvector + full-text, RRF, rerank)
+  instead of `LlamaIndex`. LlamaIndex is excellent for *getting a RAG pipeline standing
+  fast*, but the whole point here was to **engineer and measure** each retrieval stage — a
+  high-level index abstraction would hide exactly the parts I wanted to own and eval.
+- **Agent layer:** `LangGraph` over plain LangChain because I needed an explicit **state
+  machine with guardrails** (max tool rounds, conditional routing, a checkpointer for
+  multi-turn memory). LangChain's higher-level agents hide the control flow; LangGraph
+  exposes the graph, which is the thing being demonstrated.
+- So: LlamaIndex is a valid alternative for the retrieval half and I can speak to the
+  trade-off — I chose hand-built + LangGraph because *measurability and explicit control*
+  were the goals, not time-to-first-demo.
+
+## Q: You expose the tools over MCP too — why?
+
+The agent's three tools (`rag_search`, `calculator`, `list_doc_topics`) are also published
+as an **MCP (Model Context Protocol) server** (`app.mcp_server`). One tool implementation,
+two front doors: the internal LangGraph agent *and* any external MCP client (Claude
+Desktop, IDEs, other agents). The MCP handlers forward to the *same* LangChain tools, so
+the two surfaces can't drift. It's a small amount of code because the capability already
+existed — MCP is just the standard wrapper that makes it reusable outside this app.
+
 ## Q: Why pgvector (Postgres) instead of a dedicated vector DB (Pinecone/Weaviate/Qdrant)?
 
 - **One source of truth.** Vectors, metadata (`jsonb`), and the keyword index

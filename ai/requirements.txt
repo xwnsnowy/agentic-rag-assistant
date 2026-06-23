@@ -28,3 +28,6 @@ langgraph>=1.0
 langchain>=1.0
 langchain-openai>=1.0
 langchain-core>=0.3
+
+# MCP server: expose the Phase 2 tools over the Model Context Protocol
+mcp>=1.2
