@@ -114,7 +114,7 @@ NODE_OPTIONS=--use-system-ca pnpm dev    # http://localhost:3000
 
 - **Dùng `pnpm`, không dùng npm** cho `web/`.
 - **SSL/CA nội bộ:** Node/pnpm cần `NODE_OPTIONS=--use-system-ca`; Python dùng `truststore`.
-- **Git:** repo riêng đã `git init` tại `D:\WorkSpace\CV` (tách khỏi repo `D:\`). Remote:
+- **Git:** repo riêng đã `git init` tại `D:\WorkSpace\agentic-rag-assistant` (tách khỏi repo `D:\`). Remote:
   https://github.com/xwnsnowy/agentic-rag-assistant
 - **Secrets:** `ai/.env` chứa `DATABASE_URL` — đã gitignore, không commit.
 
