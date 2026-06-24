@@ -5,7 +5,7 @@
 _(Free tier: the first request may take ~60s while the API cold-starts.)_
 
 A retrieval-augmented assistant that answers questions about the **LangGraph v1.0**
-documentation, built to demonstrate AI-engineering depth: retrieval engineering,
+documentation. It goes deep on the AI-engineering layer: retrieval engineering,
 **evaluation with real numbers**, grounded generation with citations, and
 observability — not just "calling an LLM API".
 

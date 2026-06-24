@@ -22,7 +22,7 @@
 - **Semantic answer cache** — repeat / near-duplicate questions ~8.5s → ~0.65s (13×).
 - **Prompt-injection eval** — 8 attacks, resistance **1.000**.
 - **GitHub Actions**: CI (web build + ai syntax), gated eval regression job, keep-warm cron.
-- **Docs**: `ROADMAP.md`, `RATIONALE.md` (design rationale + interview FAQ incl. "vs ChatGPT",
+- **Docs**: `ROADMAP.md`, `RATIONALE.md` (design rationale + FAQ incl. "vs ChatGPT",
   pgvector vs vector DB, heading-chunking, version pinning, small model, eval method).
 - **Cold-start UX** (from the AI-PM review): web pre-warms `/health` on load + shows a
   clear "waking up the server (~40s)…" state instead of a blank wait; UptimeRobot
@@ -32,7 +32,7 @@
 - Rerank now **degrades to hybrid** on Cohere failure (no 500) — best-effort enhancement.
 
 ### Reviewed (AI-PM audit, verified on live)
-- Strong project (~8/10), interview-ready. Weak links are **operational, not features**:
+- Strong project (~8/10), solid and defensible. Weak links are **operational, not features**:
   - **P0 cold start** measured ~42s on first request → mitigated (pre-warm + loading state;
     recommend UptimeRobot 5-min ping).
   - **P0 security** — exposed OpenAI key still in use on the public deploy → **rotate**.

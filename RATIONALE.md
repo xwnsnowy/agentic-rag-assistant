@@ -1,7 +1,7 @@
 # Design rationale & FAQ
 
-Why this system is built the way it is — and honest answers to the questions an
-interviewer (or a careful reader) will ask.
+Why this system is built the way it is — and honest answers to the questions a
+careful reader will ask.
 
 ## Q: How is this different from just asking ChatGPT? ChatGPT can answer about LangGraph too.
 

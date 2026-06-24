@@ -44,7 +44,7 @@ _Metrics come two ways: an inline LLM-judge (shown above) **and** the real Ragas
 run in an isolated venv (faithfulness 0.934, answer_relevancy 0.823, context_precision
 0.885, context_recall 0.843 for hybrid+rerank) — see [ai/eval/README.md](ai/eval/README.md)._
 
-## Key decisions (interview-defensible)
+## Key decisions
 
 1. **Hybrid via RRF**, not score-mixing — fuse by rank position so cosine and
    `ts_rank` scales don't need calibrating.
@@ -70,7 +70,7 @@ python -m scripts.ask "How do I add short-term memory with a checkpointer?"
 python -m scripts.run_eval --judge        # the comparison table + Langfuse traces
 ```
 
-**One-liner for the CV:** *built a hybrid-search + reranking RAG pipeline that lifts
+**In one line:** *built a hybrid-search + reranking RAG pipeline that lifts
 retrieval MRR from 0.90 (vector baseline) to 0.92 with rerank, measured faithfulness
 with an LLM-judge, and tracked cost/latency per request in Langfuse — eval-first, not
 eval-last.*

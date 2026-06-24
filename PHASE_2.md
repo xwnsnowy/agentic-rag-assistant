@@ -49,7 +49,7 @@ agent called `list_doc_topics` to describe its coverage — a defensible choice,
 honest rather than relabelled. Full table:
 [ai/eval/results/agent_eval.md](ai/eval/results/agent_eval.md).
 
-## Reading it (interview angle)
+## Reading it (what matters)
 
 - **Orchestration, not one API call.** An explicit LangGraph state machine routes
   between an LLM node and a tool node, loops until done, and stops safely.

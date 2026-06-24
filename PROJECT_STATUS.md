@@ -164,7 +164,7 @@ NODE_OPTIONS=--use-system-ca pnpm dev     # http://localhost:3000
 
 ---
 
-## 6. CV bullet points (điền số thật ở trên)
+## 6. Tóm tắt thành quả (điền số thật ở trên)
 
 > **Agentic RAG Assistant** — *Next.js, TypeScript, Python (FastAPI), PostgreSQL+pgvector,
 > LangGraph, Cohere Rerank, Ragas, Langfuse — [live](https://agentic-rag-assistant.vercel.app)*

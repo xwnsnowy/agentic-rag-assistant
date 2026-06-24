@@ -76,7 +76,7 @@ python -m scripts.export_for_ragas              # main venv -> eval/results/raga
 
 _44 answerable items + 6 negative traps. `n=50`._
 
-## Reading the numbers (what I'd say in an interview)
+## Reading the numbers
 
 1. **Semantic >> lexical on this corpus.** Dense retrieval lifts MRR 0.33 → 0.90 and
    P@5 0.30 → 0.63 over keyword-only. Most questions are conceptual ("what is a

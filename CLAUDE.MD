@@ -92,7 +92,7 @@ docker-compose, or containers anywhere — not for local dev, not for deployment
 lightweight.
 
 > **One narrow, approved exception (containerization demo):** `ai/Dockerfile`, `docker-compose.yml`
-> and `ai/.dockerignore` exist to demonstrate the service is containerizable (a JD requirement).
+> and `ai/.dockerignore` exist to demonstrate the service is containerizable (a common production requirement).
 > They are **never built or run on the dev machine** — the CI job `docker` in
 > `.github/workflows/ci.yml` builds + smoke-tests the image on GitHub's cloud runner. Local dev
 > and production deploy stay no-Docker (uvicorn + Vercel/Render/Neon). Do NOT introduce Docker
@@ -171,4 +171,4 @@ is the first place to look for how to run anything.
 
 I am relearning some of this stack, so **explain non-obvious decisions briefly as you make
 them** (why hybrid search, why rerank, why this chunking choice). I want to be able to defend
-every design choice in an interview — prefer teaching me the reasoning over silently doing it.
+every design choice on its merits — prefer teaching me the reasoning over silently doing it.
