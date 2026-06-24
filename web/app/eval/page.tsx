@@ -10,8 +10,15 @@ import {
 } from "@/lib/eval-data";
 
 export const metadata = {
-  title: "Eval — Agentic RAG",
+  // title template in layout appends " — Agentic RAG" automatically.
+  title: "Eval",
   description: "Retrieval, generation, agent and safety metrics for the Agentic RAG system.",
+  alternates: { canonical: "/eval" },
+  openGraph: {
+    title: "Eval — Agentic RAG",
+    description: "Retrieval, generation, agent and safety metrics for the Agentic RAG system.",
+    url: "/eval",
+  },
 };
 
 export default function EvalPage() {
