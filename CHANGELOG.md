@@ -3,6 +3,10 @@
 ## 2026-06-23
 
 ### Added
+- **Containerization** — `ai/Dockerfile` + `docker-compose.yml` (API + Postgres/pgvector)
+  + `ai/.dockerignore`. **Built and smoke-tested in CI** (new `docker` job in `ci.yml`) on
+  GitHub's cloud runner, so the image is verified without Docker on the dev machine. Production
+  deploy stays managed (Render/Vercel/Neon); the image is a portability artifact.
 - **MCP server** (`ai/app/mcp_server.py`) — the agent's three tools (rag_search /
   calculator / list_doc_topics) published over the Model Context Protocol (stdio), reusing
   `app.tools` so the internal-agent and external-client surfaces can't drift. Run:

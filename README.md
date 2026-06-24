@@ -99,6 +99,19 @@ pnpm dev        # http://localhost:3000
 > This machine uses a corporate/local CA: Node needs `NODE_OPTIONS=--use-system-ca`
 > and Python uses `truststore` (auto-injected). See [CLAUDE.md](CLAUDE.md).
 
+### Containerized (optional)
+
+The AI service ships a [`ai/Dockerfile`](ai/Dockerfile) + [`docker-compose.yml`](docker-compose.yml)
+(API + Postgres/pgvector in one command). Production deploys to **managed platforms**
+(Render/Vercel/Neon) rather than self-hosted containers — simpler and cheaper at this scale — so
+the image is a **portability artifact**: it's **built and smoke-tested in CI** (`docker` job in
+[ci.yml](.github/workflows/ci.yml)) on GitHub's cloud runner, proving it works without Docker on
+the dev machine.
+
+```bash
+docker compose up --build      # needs Docker; brings up API + pgvector
+```
+
 ## Project layout
 
 - `ai/app/` — config, db, embeddings, chunking, retrieval, rerank, generation, pipeline

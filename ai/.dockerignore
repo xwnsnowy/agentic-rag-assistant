@@ -1,0 +1,17 @@
+# Keep the build context (and image) small and secret-free.
+# Local virtualenvs — never ship these.
+.venv
+.venv-ragas
+# Python caches
+__pycache__
+**/__pycache__
+*.pyc
+.pytest_cache
+# Secrets — MUST never enter the image.
+.env
+.env.*
+# Generated corpus (produced by fetch_corpus + ingest at runtime; lives in Postgres).
+data
+# Docs / eval outputs not needed at runtime.
+*.md
+eval/results

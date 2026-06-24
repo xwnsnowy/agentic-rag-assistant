@@ -38,3 +38,28 @@ jobs:
           python-version: "3.12"
       # Compile-only check (no heavy deps install): catches syntax errors fast.
       - run: python -m compileall -q app scripts eval
+
+  docker:
+    name: ai · docker build + smoke-test
+    runs-on: ubuntu-latest   # GitHub's runner has Docker preinstalled — so the
+                             # image is built in the cloud, never on the dev machine.
+    steps:
+      - uses: actions/checkout@v4
+      # 1) Build the image from ai/Dockerfile. A broken Dockerfile fails here.
+      - name: Build image
+        run: docker build -t agentic-rag-ai ./ai
+      # 2) Run it and prove the app actually boots — hit /health (no DB needed).
+      - name: Run container
+        run: docker run -d --name ai -p 8000:8000 agentic-rag-ai
+      - name: Smoke-test /health
+        run: |
+          for i in $(seq 1 20); do
+            if curl -fsS http://localhost:8000/health | grep -q '"status":"ok"'; then
+              echo "✓ /health returned ok"; exit 0
+            fi
+            sleep 2
+          done
+          echo "✗ /health never became healthy"; docker logs ai; exit 1
+      - name: Container logs
+        if: always()
+        run: docker logs ai || true

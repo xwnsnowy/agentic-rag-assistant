@@ -17,6 +17,7 @@ What's been built beyond the core phases, and what's queued. Core phases live in
 | **Safety** | **Prompt-injection eval** — 8 attacks, resistance **1.000** | `ai/eval/injection_*` |
 | **Resilience** | Rerank **degrades to hybrid** on Cohere failure (no 500) | `ai/app/rerank.py` |
 | **Ops** | **GitHub Actions**: CI (web build + ai syntax), gated eval regression job, keep-warm cron | `.github/workflows/` |
+| **Ops** | **Containerization** — `Dockerfile` + `docker-compose` (API + pgvector), **built & smoke-tested in CI** (cloud, no local Docker) | `ai/Dockerfile`, `docker-compose.yml` |
 | **Deploy** | Live: Vercel + Render + Neon, CORS wired | [DEPLOY.md](DEPLOY.md) |
 
 Run the new evals:

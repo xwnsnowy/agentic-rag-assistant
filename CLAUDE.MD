@@ -91,6 +91,13 @@ The dev machine is resource-constrained and cannot run Docker well. Do NOT use D
 docker-compose, or containers anywhere — not for local dev, not for deployment. Keep everything
 lightweight.
 
+> **One narrow, approved exception (portfolio artifact):** `ai/Dockerfile`, `docker-compose.yml`
+> and `ai/.dockerignore` exist to demonstrate the service is containerizable (a JD requirement).
+> They are **never built or run on the dev machine** — the CI job `docker` in
+> `.github/workflows/ci.yml` builds + smoke-tests the image on GitHub's cloud runner. Local dev
+> and production deploy stay no-Docker (uvicorn + Vercel/Render/Neon). Do NOT introduce Docker
+> into the local-dev or deploy paths.
+
 - Run `web/` with `pnpm dev` (use **pnpm**, not npm); run `ai/` with `uvicorn` (a local Python venv, not a container).
 - **SSL note (this machine has a corporate/local CA):**
   - Node/pnpm: prefix with `NODE_OPTIONS=--use-system-ca` (e.g. `NODE_OPTIONS=--use-system-ca pnpm install`).
