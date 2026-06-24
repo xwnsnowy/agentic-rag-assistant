@@ -178,6 +178,32 @@
   .trace-line { opacity: 1; }
 }
 
+/* ── AI mascot ─────────────────────────────────────────────────────────────
+   Cute bot used on /chat. All motion CSS-only; see components/ai-mascot.tsx. */
+.mascot { animation: mascot-float 3.6s ease-in-out infinite; }
+.mascot[data-state="thinking"] { animation-duration: 2.2s; }
+.mascot[data-state="thinking"] .mascot-body { animation: mascot-wobble 1.5s ease-in-out infinite; transform-box: fill-box; transform-origin: center bottom; }
+.mascot-eye { transform-box: fill-box; transform-origin: center; animation: mascot-blink 4.4s infinite; }
+.mascot-antenna { transform-box: fill-box; transform-origin: center; animation: mascot-antenna 1.8s ease-in-out infinite; }
+.mascot[data-state="thinking"] .mascot-antenna { animation-duration: 0.9s; }
+.mascot-think-dot { animation: mascot-think 1.2s ease-in-out infinite; }
+.mascot-think-dot:nth-child(2) { animation-delay: 0.15s; }
+.mascot-think-dot:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes mascot-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@keyframes mascot-wobble { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+@keyframes mascot-blink { 0%, 90%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+@keyframes mascot-antenna { 0%, 100% { opacity: 0.55; r: 5; } 50% { opacity: 1; r: 6; } }
+@keyframes mascot-think { 0%, 80%, 100% { opacity: 0.25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-4px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot,
+  .mascot .mascot-body,
+  .mascot-eye,
+  .mascot-antenna,
+  .mascot-think-dot { animation: none !important; }
+}
+
 /* Inline code inside answers */
 .prose-answer code {
   font-family: var(--font-mono), ui-monospace, monospace;

@@ -9,7 +9,6 @@ import {
   Calculator,
   FolderTree,
   Loader2,
-  Network,
   Plus,
   Send,
 } from "lucide-react";
@@ -17,6 +16,7 @@ import { API_URL, ask, runAgentStream, type Citation } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Markdown } from "@/components/markdown";
+import { AiMascot } from "@/components/ai-mascot";
 import { cn } from "@/lib/utils";
 
 type Mode = "agent" | "rag";
@@ -138,13 +138,20 @@ export default function ChatApp() {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-2xl flex-col px-5">
+    <>
+      {/* Backdrop — same agentic aurora + grid as the landing page, for cohesion. */}
+      <div className="aurora" aria-hidden>
+        <span className="a1" />
+        <span className="a2" />
+        <span className="a3" />
+      </div>
+      <div className="agentic-grid" aria-hidden />
+
+      <div className="mx-auto flex min-h-dvh max-w-2xl flex-col px-5">
       {/* Header */}
       <header className="flex items-start justify-between gap-4 pb-4 pt-7">
         <Link href="/" className="flex items-center gap-3">
-          <div className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30">
-            <Network className="size-5" />
-          </div>
+          <AiMascot state={loading ? "thinking" : "idle"} className="size-11 flex-none" />
           <div>
             <h1 className="text-[17px] font-bold tracking-tight">
               Agentic RAG — LangGraph docs
@@ -226,8 +233,14 @@ export default function ChatApp() {
       {/* Chat */}
       <main className="flex flex-1 flex-col gap-6 pb-6">
         {turns.length === 0 && !loading && (
-          <div className="my-auto space-y-5 py-10 text-center">
-            <h2 className="text-base font-semibold">Ask about LangGraph v1.0</h2>
+          <div className="my-auto flex flex-col items-center gap-5 py-10 text-center">
+            <AiMascot state="idle" className="size-28" />
+            <div className="space-y-1.5">
+              <h2 className="text-lg font-semibold">Hi! Ask me about LangGraph v1.0</h2>
+              <p className="text-[13px] text-muted-foreground">
+                I&apos;ll search the docs, pick my own tools, and answer with citations.
+              </p>
+            </div>
             <div className="flex flex-wrap justify-center gap-2">
               {SUGGESTIONS.map((s) => (
                 <button
@@ -250,10 +263,8 @@ export default function ChatApp() {
 
         {loading && thinking && (
           <div className="flex items-start gap-3">
-            <div className="grid size-7 flex-none place-items-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow shadow-indigo-500/30">
-              <Network className="size-3.5" />
-            </div>
-            <div className="flex items-center gap-2.5 rounded-2xl border bg-card px-4 py-3 shadow-sm">
+            <AiMascot state="thinking" className="size-9 flex-none" />
+            <div className="glass flex items-center gap-2.5 rounded-2xl px-4 py-3 shadow-sm">
               <Loader2 className="size-4 animate-spin text-primary" />
               <span className="text-sm text-muted-foreground">
                 {slow
@@ -282,9 +293,10 @@ export default function ChatApp() {
             </div>
             {/* answer */}
             <div className="flex items-start gap-3">
-              <div className="grid size-7 flex-none place-items-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow shadow-indigo-500/30">
-                <Network className="size-3.5" />
-              </div>
+              <AiMascot
+                state={i === 0 && loading ? "answering" : "idle"}
+                className="size-9 flex-none"
+              />
               <div className="min-w-0 flex-1">
                 {t.toolsUsed.length > 0 && (
                   <div className="mb-2.5 flex flex-wrap gap-1.5">
@@ -303,7 +315,7 @@ export default function ChatApp() {
                     })}
                   </div>
                 )}
-                <div className="rounded-2xl border bg-card p-4 shadow-sm">
+                <div className="glass rounded-2xl p-4 shadow-sm">
                   {t.answer ? <Markdown>{t.answer}</Markdown> : i === 0 && loading ? null : "(no answer)"}
                   {i === 0 && loading && !thinking && (
                     <span className="ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 animate-pulse rounded-sm bg-primary align-text-bottom" />
@@ -344,7 +356,7 @@ export default function ChatApp() {
             e.preventDefault();
             send(input);
           }}
-          className="flex items-end gap-2.5 rounded-2xl border bg-card py-2 pl-4 pr-2 shadow-xl"
+          className="glass flex items-end gap-2.5 rounded-2xl py-2 pl-4 pr-2 shadow-xl"
         >
           <textarea
             value={input}
@@ -374,7 +386,8 @@ export default function ChatApp() {
           <kbd className="rounded border bg-card px-1.5 py-0.5 font-mono text-[10px]">Enter</kbd> newline
         </p>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 
