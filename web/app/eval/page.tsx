@@ -26,7 +26,7 @@ export default function EvalPage() {
     <div className="mx-auto max-w-3xl px-5 pb-20">
       <header className="flex items-center justify-between gap-4 py-7">
         <Link
-          href="/"
+          href="/chat"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="size-4" /> back to chat
