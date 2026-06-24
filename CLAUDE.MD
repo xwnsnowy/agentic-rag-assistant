@@ -5,7 +5,7 @@ Project context for Claude Code. Read this before working on any task in this re
 ## What this project is
 
 An **Agentic RAG Assistant** that answers questions about the **LangGraph documentation**.
-It is a portfolio project to demonstrate AI-Engineer skills: retrieval engineering, evaluation,
+It demonstrates AI-Engineer skills: retrieval engineering, evaluation,
 and agent orchestration — not just "calling an LLM API". Polish and correctness matter more
 than feature count. Note the intentional meta-angle: the agent layer is built **with** LangGraph,
 and answers questions **about** LangGraph — building it is also how the author learns the tool.
@@ -91,7 +91,7 @@ The dev machine is resource-constrained and cannot run Docker well. Do NOT use D
 docker-compose, or containers anywhere — not for local dev, not for deployment. Keep everything
 lightweight.
 
-> **One narrow, approved exception (portfolio artifact):** `ai/Dockerfile`, `docker-compose.yml`
+> **One narrow, approved exception (containerization demo):** `ai/Dockerfile`, `docker-compose.yml`
 > and `ai/.dockerignore` exist to demonstrate the service is containerizable (a JD requirement).
 > They are **never built or run on the dev machine** — the CI job `docker` in
 > `.github/workflows/ci.yml` builds + smoke-tests the image on GitHub's cloud runner. Local dev

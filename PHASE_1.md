@@ -1,6 +1,6 @@
 # Phase 1 — RAG core + Eval ✅ COMPLETE (FLAGSHIP)
 
-> The phase that makes this a portfolio piece: a real RAG pipeline **with a
+> The phase that makes this project stand out: a real RAG pipeline **with a
 > measurement layer**. The deep-dive write-up (metrics + full table + caveats)
 > lives in **[ai/eval/README.md](ai/eval/README.md)**; this is the recap.
 > Plan: [Agentic_RAG_Build_Plan.md](Agentic_RAG_Build_Plan.md).

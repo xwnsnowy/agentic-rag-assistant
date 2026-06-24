@@ -29,7 +29,7 @@
 | Frontend / App | Next.js, TypeScript, Tailwind, Vercel AI SDK (streaming) | Đã thành thạo, để làm UI production |
 | Vector store | PostgreSQL + **pgvector** | Không phải học DB mới; ghi điểm "hiểu vector search ở tầng DB" |
 | AI service | **Python + FastAPI** | Nơi đặt embeddings, retrieval, agent, eval |
-| Embeddings | `text-embedding-3-small` (OpenAI) hoặc Voyage/Cohere | small là đủ tốt + rẻ cho portfolio |
+| Embeddings | `text-embedding-3-small` (OpenAI) hoặc Voyage/Cohere | small là đủ tốt + rẻ cho dự án |
 | LLM | qua OpenRouter (đã biết) | Linh hoạt đổi model để so eval |
 | Reranking | Cohere Rerank API hoặc cross-encoder (bge-reranker) | API nhanh hơn để bắt đầu |
 | Eval | **Ragas** + LLM-as-judge tự viết | Ragas cho metric chuẩn, custom cho cái Ragas thiếu |

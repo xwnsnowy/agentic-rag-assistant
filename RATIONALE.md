@@ -27,7 +27,7 @@ answer gets this wrong; a doc-grounded, version-pinned system gets it right.
 the edge over ChatGPT is limited, and pretending otherwise is a red flag.
 
 **Where the real value is:** this project isn't "beat ChatGPT at LangGraph Q&A". It's a
-**portfolio of the engineering skills** — retrieval engineering, evaluation, agent
+**demonstration of the engineering skills** — retrieval engineering, evaluation, agent
 orchestration, guardrails — that apply to the real use case ChatGPT *can't* serve:
 **private / internal / proprietary data the model never saw and that you must build and
 measure yourself** (company docs, internal codebases, contracts). LangGraph docs are just

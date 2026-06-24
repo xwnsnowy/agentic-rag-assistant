@@ -32,7 +32,7 @@
 - Rerank now **degrades to hybrid** on Cohere failure (no 500) — best-effort enhancement.
 
 ### Reviewed (AI-PM audit, verified on live)
-- Strong portfolio (~8/10), interview-ready. Weak links are **operational, not features**:
+- Strong project (~8/10), interview-ready. Weak links are **operational, not features**:
   - **P0 cold start** measured ~42s on first request → mitigated (pre-warm + loading state;
     recommend UptimeRobot 5-min ping).
   - **P0 security** — exposed OpenAI key still in use on the public deploy → **rotate**.
