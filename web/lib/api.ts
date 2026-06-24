@@ -66,3 +66,60 @@ export async function runAgent(
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
+
+export type AgentStreamHandlers = {
+  onTools?: (tools: string[]) => void;
+  onToken?: (delta: string) => void;
+  onDone?: (info: { thread_id: string; tools_used: string[] }) => void;
+};
+
+// Streaming variant of runAgent: reads the SSE body with a stream reader (no
+// Vercel AI SDK needed — the backend is FastAPI) and fires handlers per event.
+export async function runAgentStream(
+  question: string,
+  threadId: string | undefined,
+  handlers: AgentStreamHandlers,
+  signal?: AbortSignal,
+): Promise<void> {
+  const res = await fetch(`${API_URL}/agent/stream`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question, thread_id: threadId }),
+    signal,
+  });
+  if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    // SSE frames are separated by a blank line; a frame may span reads.
+    let sep: number;
+    while ((sep = buffer.indexOf("\n\n")) !== -1) {
+      const frame = buffer.slice(0, sep);
+      buffer = buffer.slice(sep + 2);
+      const dataLine = frame.split("\n").find((l) => l.startsWith("data:"));
+      if (!dataLine) continue;
+      const payload = dataLine.slice(5).trim();
+      if (!payload) continue;
+      let ev: { type: string; v?: unknown; thread_id?: string; tools_used?: string[] };
+      try {
+        ev = JSON.parse(payload);
+      } catch {
+        continue;
+      }
+      if (ev.type === "token") handlers.onToken?.(String(ev.v ?? ""));
+      else if (ev.type === "tools") handlers.onTools?.((ev.v as string[]) ?? []);
+      else if (ev.type === "done")
+        handlers.onDone?.({
+          thread_id: ev.thread_id ?? "",
+          tools_used: ev.tools_used ?? [],
+        });
+    }
+  }
+}

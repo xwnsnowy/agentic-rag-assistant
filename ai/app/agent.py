@@ -18,7 +18,13 @@ from functools import lru_cache
 from typing import Annotated, TypedDict
 from uuid import uuid4
 
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
+from langchain_core.messages import (
+    AIMessage,
+    AIMessageChunk,
+    HumanMessage,
+    SystemMessage,
+    ToolMessage,
+)
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
@@ -97,6 +103,18 @@ def _graph():
     return g.compile(checkpointer=_checkpointer)
 
 
+def _tracing_callbacks() -> list:
+    """Langfuse callback (if configured); tracing must never break the agent."""
+    if not obs.init():
+        return []
+    try:
+        from langfuse.langchain import CallbackHandler
+
+        return [CallbackHandler()]
+    except Exception:  # noqa: BLE001
+        return []
+
+
 def run_agent(question: str, thread_id: str | None = None) -> AgentResult:
     # A stable thread_id keeps short-term memory across turns; without one we use
     # a fresh ephemeral id so the call is stateless.
@@ -107,14 +125,7 @@ def run_agent(question: str, thread_id: str | None = None) -> AgentResult:
     if len(q) > MAX_QUESTION_CHARS:
         return AgentResult(answer="Your question is too long; please shorten it.", thread_id=tid)
 
-    callbacks = []
-    if obs.init():
-        try:
-            from langfuse.langchain import CallbackHandler
-
-            callbacks.append(CallbackHandler())
-        except Exception:  # noqa: BLE001 - tracing must never break the agent
-            pass
+    callbacks = _tracing_callbacks()
 
     state = _graph().invoke(
         {"messages": [HumanMessage(content=q)]},
@@ -145,3 +156,57 @@ def run_agent(question: str, thread_id: str | None = None) -> AgentResult:
         "I couldn't produce an answer.",
     )
     return AgentResult(answer=answer, tools_used=tools_used, rounds=rounds, thread_id=tid)
+
+
+async def astream_agent(question: str, thread_id: str | None = None):
+    """Stream the agent run token-by-token for a live UI.
+
+    Yields plain dict events (the HTTP layer serialises them as SSE):
+      {"type": "tools", "v": [...]}  tool name(s) as the agent decides to call them
+      {"type": "token", "v": "..."}  a chunk of the final answer text
+      {"type": "done",  "thread_id": ..., "tools_used": [...]}
+
+    We use LangGraph's stream_mode="messages", which surfaces the LLM's token
+    chunks as they're generated. Tool-planning chunks carry tool-call deltas but
+    empty text; the final-answer round carries text — so filtering on non-empty
+    content naturally streams just the answer, not the intermediate reasoning.
+    """
+    tid = thread_id or f"ephemeral-{uuid4().hex}"
+    q = (question or "").strip()
+    if not q:
+        yield {"type": "token", "v": "Please ask a question."}
+        yield {"type": "done", "thread_id": tid, "tools_used": []}
+        return
+    if len(q) > MAX_QUESTION_CHARS:
+        yield {"type": "token", "v": "Your question is too long; please shorten it."}
+        yield {"type": "done", "thread_id": tid, "tools_used": []}
+        return
+
+    config = {
+        "configurable": {"thread_id": tid},
+        "recursion_limit": 2 * MAX_TOOL_ROUNDS + 2,
+        "callbacks": _tracing_callbacks(),
+    }
+
+    tools_used: list[str] = []
+    seen: set[tuple] = set()
+    async for chunk, _meta in _graph().astream(
+        {"messages": [HumanMessage(content=q)]},
+        config=config,
+        stream_mode="messages",
+    ):
+        # Only LLM token chunks — skip ToolMessages, whose .content is tool output.
+        if not isinstance(chunk, AIMessageChunk):
+            continue
+        # Capture tool names as the model emits each tool-call delta.
+        for tc in chunk.tool_call_chunks or []:
+            name, idx = tc.get("name"), tc.get("index")
+            if name and (idx, name) not in seen:
+                seen.add((idx, name))
+                tools_used.append(name)
+                yield {"type": "tools", "v": list(dict.fromkeys(tools_used))}
+        # Stream the answer text.
+        if isinstance(chunk.content, str) and chunk.content:
+            yield {"type": "token", "v": chunk.content}
+
+    yield {"type": "done", "thread_id": tid, "tools_used": list(dict.fromkeys(tools_used))}

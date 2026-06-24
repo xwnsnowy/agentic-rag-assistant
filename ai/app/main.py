@@ -5,15 +5,20 @@ Surface area:
   GET  /health      -> liveness (no external deps)
   GET  /db/health   -> checks the Postgres/Neon connection
   POST /ask         -> run the RAG pipeline, return answer + citations
+  POST /agent       -> run the LangGraph agent (picks tools), return full answer
+  POST /agent/stream-> same agent, streamed token-by-token over SSE
 
 Run locally:  uvicorn app.main:app --reload --port 8000
 """
 
+import json
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from app.agent import run_agent
+from app.agent import astream_agent, run_agent
 from app.config import get_settings
 from app.db import ping
 from app.pipeline import CONFIGS, HYBRID_RERANK, answer_question
@@ -91,3 +96,26 @@ def agent_endpoint(req: AgentRequest):
         "rounds": res.rounds,
         "thread_id": res.thread_id,
     }
+
+
+@app.post("/agent/stream")
+async def agent_stream_endpoint(req: AgentRequest):
+    """Same as /agent, but streams the answer token-by-token over SSE.
+
+    Each line is `data: {json}\\n\\n` with an event of type token | tools | done.
+    The frontend reads the body with a stream reader and appends tokens live.
+    """
+
+    async def sse():
+        async for ev in astream_agent(req.question, thread_id=req.thread_id):
+            yield f"data: {json.dumps(ev)}\n\n"
+
+    return StreamingResponse(
+        sse(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            # Disable proxy buffering (e.g. Render/nginx) so tokens flush immediately.
+            "X-Accel-Buffering": "no",
+        },
+    )

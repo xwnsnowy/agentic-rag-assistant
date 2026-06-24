@@ -13,7 +13,7 @@ import {
   Plus,
   Send,
 } from "lucide-react";
-import { API_URL, ask, runAgent, type Citation } from "@/lib/api";
+import { API_URL, ask, runAgentStream, type Citation } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Markdown } from "@/components/markdown";
@@ -50,6 +50,10 @@ export default function Home() {
   const [config, setConfig] = useState(CONFIGS[0]);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [loading, setLoading] = useState(false);
+  // While the agent is streaming, `loading` stays true (locks the composer) but
+  // `thinking` flips false once the first token/tool arrives, so we swap the
+  // "thinking…" bubble for the answer that's now growing in place.
+  const [thinking, setThinking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [threadId, setThreadId] = useState<string>("");
   const [slow, setSlow] = useState(false);
@@ -85,15 +89,39 @@ export default function Home() {
     setInput("");
     setError(null);
     setLoading(true);
+    setThinking(true);
     try {
       if (mode === "agent") {
         const tid = threadId || (typeof crypto !== "undefined" ? crypto.randomUUID() : String(Date.now()));
-        const res = await runAgent(q, tid);
-        setThreadId(res.thread_id || tid);
-        setTurns((t) => [
-          { question: q, label: "agent", answer: res.answer, citations: [], toolsUsed: res.tools_used },
-          ...t,
-        ]);
+        // Create the (empty) answer turn lazily on the first event, then grow it
+        // in place. The streaming turn is always index 0 (composer is locked).
+        let created = false;
+        const ensureTurn = () => {
+          if (created) return;
+          created = true;
+          setThinking(false);
+          setTurns((t) => [
+            { question: q, label: "agent", answer: "", citations: [], toolsUsed: [] },
+            ...t,
+          ]);
+        };
+        const patchTop = (fn: (top: Turn) => Turn) =>
+          setTurns((t) => (t.length ? [fn(t[0]), ...t.slice(1)] : t));
+
+        await runAgentStream(q, tid, {
+          onTools: (tools) => {
+            ensureTurn();
+            patchTop((top) => ({ ...top, toolsUsed: tools }));
+          },
+          onToken: (delta) => {
+            ensureTurn();
+            patchTop((top) => ({ ...top, answer: (top.answer ?? "") + delta }));
+          },
+          onDone: ({ thread_id }) => {
+            ensureTurn();
+            setThreadId(thread_id || tid);
+          },
+        });
       } else {
         const res = await ask(q, config);
         setTurns((t) => [
@@ -105,6 +133,7 @@ export default function Home() {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
+      setThinking(false);
     }
   }
 
@@ -219,7 +248,7 @@ export default function Home() {
           </p>
         )}
 
-        {loading && (
+        {loading && thinking && (
           <div className="flex items-start gap-3">
             <div className="grid size-7 flex-none place-items-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow shadow-indigo-500/30">
               <Network className="size-3.5" />
@@ -275,7 +304,10 @@ export default function Home() {
                   </div>
                 )}
                 <div className="rounded-2xl border bg-card p-4 shadow-sm">
-                  {t.answer ? <Markdown>{t.answer}</Markdown> : "(no answer)"}
+                  {t.answer ? <Markdown>{t.answer}</Markdown> : i === 0 && loading ? null : "(no answer)"}
+                  {i === 0 && loading && !thinking && (
+                    <span className="ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 animate-pulse rounded-sm bg-primary align-text-bottom" />
+                  )}
                 </div>
                 {t.citations.length > 0 && (
                   <ul className="mt-3.5 flex flex-col gap-2 border-t border-dashed pt-3.5">

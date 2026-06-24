@@ -40,8 +40,11 @@ layer. Do not collapse the Python layer into TS.
 - Reranking: Cohere Rerank API (or a cross-encoder later)
 - Eval: Ragas + a small custom LLM-as-judge
 - Observability: Langfuse (traces, cost, latency)
-- Agent orchestration: LangGraph (Python)
-- Frontend streaming: Vercel AI SDK
+- Agent orchestration: LangGraph (Python); agent tools also exposed over MCP
+- Frontend: Next.js + shadcn/ui (Radix + next-themes), Markdown answers via react-markdown.
+  Agent answers stream token-by-token over SSE (`POST /agent/stream` -> `runAgentStream`
+  reads the body with a stream reader). No Vercel AI SDK — the backend is FastAPI, so plain
+  SSE is simpler than adapting the SDK's data-stream protocol.
 
 ## Build phases (current status: Phase 0, 1, 2 COMPLETE. Phase 1 eval proves hybrid+rerank > baseline; Phase 2 LangGraph agent picks tools at 0.917 accuracy with guardrails. Next: Phase 3 polish, optional.)
 
