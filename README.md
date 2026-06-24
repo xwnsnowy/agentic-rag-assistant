@@ -64,26 +64,29 @@ Two languages, two roles — TypeScript for the app, Python for the AI/eval laye
 
 | Layer | Choice |
 |---|---|
-| Frontend | Next.js, TypeScript, Tailwind |
+| Frontend | Next.js, TypeScript, Tailwind, shadcn/ui (Radix + next-themes) |
 | AI service | Python, FastAPI |
 | Vector store | PostgreSQL + **pgvector** (Neon) |
 | Embeddings | OpenAI `text-embedding-3-small` |
 | Hybrid search | pgvector cosine + Postgres full-text, fused with RRF |
 | Reranking | Cohere Rerank (`rerank-v3.5`) |
-| Generation / judge | `gpt-4o-mini` (OpenAI-compatible) |
+| LLM gateway | OpenRouter (`openai/gpt-4o-mini`) — generation + LLM-as-judge |
+| Eval | Ragas (isolated venv) + a custom LLM-as-judge |
 | Observability | Langfuse (cost, latency, traces) |
-| Agent (Phase 2) | LangGraph |
+| Agent (Phase 2) | LangGraph, also exposed over **MCP** |
+| CI | GitHub Actions (lint/eval/Docker smoke-test/keep-warm) |
 
 ## Run locally
 
-Prereqs: a Neon Postgres URL and an OpenAI API key (Cohere + Langfuse optional).
+Prereqs: a Neon Postgres URL, an OpenAI key for embeddings, and an OpenRouter key
+for generation / the eval judge (Cohere rerank + Langfuse optional).
 
 ```bash
 # AI service
 cd ai
 python -m venv .venv && .venv\Scripts\Activate.ps1      # Windows
 pip install -r requirements.txt
-cp .env.example .env        # fill DATABASE_URL + EMBEDDING_API_KEY (+ optional keys)
+cp .env.example .env        # fill DATABASE_URL + EMBEDDING_API_KEY + OPENROUTER_API_KEY (+ optional keys)
 python -m scripts.init_db        # pgvector + tables
 python -m scripts.fetch_corpus   # download LangGraph v1.0 docs
 python -m scripts.ingest         # chunk -> embed -> upsert
