@@ -52,6 +52,7 @@ export type AgentResponse = {
   tools_used: string[];
   rounds: number;
   thread_id: string;
+  citations: Citation[];
 };
 
 export async function runAgent(
@@ -70,6 +71,7 @@ export async function runAgent(
 export type AgentStreamHandlers = {
   onTools?: (tools: string[]) => void;
   onToken?: (delta: string) => void;
+  onCitations?: (citations: Citation[]) => void;
   onDone?: (info: { thread_id: string; tools_used: string[] }) => void;
 };
 
@@ -115,6 +117,7 @@ export async function runAgentStream(
       }
       if (ev.type === "token") handlers.onToken?.(String(ev.v ?? ""));
       else if (ev.type === "tools") handlers.onTools?.((ev.v as string[]) ?? []);
+      else if (ev.type === "citations") handlers.onCitations?.((ev.v as Citation[]) ?? []);
       else if (ev.type === "done")
         handlers.onDone?.({
           thread_id: ev.thread_id ?? "",

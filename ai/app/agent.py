@@ -13,6 +13,7 @@ Guardrails (the part that matters most):
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from functools import lru_cache
 from typing import Annotated, TypedDict
@@ -33,10 +34,21 @@ from langgraph.prebuilt import ToolNode
 
 from app import observability as obs
 from app.config import get_settings
-from app.tools import TOOLS
+from app.tools import TOOLS, begin_citation_capture
 
 MAX_TOOL_ROUNDS = 4
 MAX_QUESTION_CHARS = 2000
+
+_CITE_RE = re.compile(r"\[(\d+)\]")
+
+
+def _citations_for(answer: str, sink: list) -> list[dict]:
+    """Map the inline [n] markers in the answer onto the captured rag_search sources."""
+    if not sink:
+        return []
+    by_n = {s["n"]: s for s in sink}
+    cited = sorted({int(n) for n in _CITE_RE.findall(answer or "")})
+    return [by_n[n] for n in cited if n in by_n]
 
 SYSTEM = SystemMessage(
     content=(
@@ -68,6 +80,7 @@ class AgentResult:
     tools_used: list[str] = field(default_factory=list)  # in call order
     rounds: int = 0
     thread_id: str = ""
+    citations: list[dict] = field(default_factory=list)  # sources cited as [n]
 
 
 # Short-term memory across turns. MemorySaver is process-local (fine for the
@@ -131,6 +144,7 @@ def run_agent(question: str, thread_id: str | None = None) -> AgentResult:
         return AgentResult(answer="Your question is too long; please shorten it.", thread_id=tid)
 
     callbacks = _tracing_callbacks()
+    sink = begin_citation_capture()
 
     state = _graph().invoke(
         {"messages": [HumanMessage(content=q)]},
@@ -160,7 +174,13 @@ def run_agent(question: str, thread_id: str | None = None) -> AgentResult:
         (m.content for m in reversed(turn) if isinstance(m, AIMessage) and m.content),
         "I couldn't produce an answer.",
     )
-    return AgentResult(answer=answer, tools_used=tools_used, rounds=rounds, thread_id=tid)
+    return AgentResult(
+        answer=answer,
+        tools_used=tools_used,
+        rounds=rounds,
+        thread_id=tid,
+        citations=_citations_for(answer, sink),
+    )
 
 
 async def astream_agent(question: str, thread_id: str | None = None):
@@ -192,9 +212,11 @@ async def astream_agent(question: str, thread_id: str | None = None):
         "recursion_limit": 2 * MAX_TOOL_ROUNDS + 2,
         "callbacks": _tracing_callbacks(),
     }
+    sink = begin_citation_capture()
 
     tools_used: list[str] = []
     seen: set[tuple] = set()
+    answer_parts: list[str] = []
     async for chunk, _meta in _graph().astream(
         {"messages": [HumanMessage(content=q)]},
         config=config,
@@ -212,6 +234,11 @@ async def astream_agent(question: str, thread_id: str | None = None):
                 yield {"type": "tools", "v": list(dict.fromkeys(tools_used))}
         # Stream the answer text.
         if isinstance(chunk.content, str) and chunk.content:
+            answer_parts.append(chunk.content)
             yield {"type": "token", "v": chunk.content}
 
+    # Once the full answer text is known, resolve its [n] markers to sources.
+    citations = _citations_for("".join(answer_parts), sink)
+    if citations:
+        yield {"type": "citations", "v": citations}
     yield {"type": "done", "thread_id": tid, "tools_used": list(dict.fromkeys(tools_used))}

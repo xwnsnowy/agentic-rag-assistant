@@ -95,6 +95,7 @@ def agent_endpoint(req: AgentRequest):
         "tools_used": res.tools_used,
         "rounds": res.rounds,
         "thread_id": res.thread_id,
+        "citations": res.citations,
     }
 
 

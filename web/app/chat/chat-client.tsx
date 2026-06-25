@@ -117,6 +117,10 @@ export default function ChatApp() {
             ensureTurn();
             patchTop((top) => ({ ...top, answer: (top.answer ?? "") + delta }));
           },
+          onCitations: (citations) => {
+            ensureTurn();
+            patchTop((top) => ({ ...top, citations }));
+          },
           onDone: ({ thread_id }) => {
             ensureTurn();
             setThreadId(thread_id || tid);
