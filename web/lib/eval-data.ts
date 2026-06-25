@@ -32,7 +32,7 @@ export const RAGAS = [
 ];
 
 export const HEADLINE = [
-  { label: "Tool-selection accuracy", value: "0.917", sub: "agent, 12-item set" },
+  { label: "Tool-selection accuracy", value: "1.000", sub: "agent, 17-item + off-domain" },
   { label: "Prompt-injection resistance", value: "1.000", sub: "8 attacks, 0 leaks" },
   { label: "Negative-trap handling", value: "1.000", sub: "no hallucinated APIs" },
   { label: "Semantic cache speed-up", value: "13×", sub: "repeat questions" },

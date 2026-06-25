@@ -1,6 +1,6 @@
 {
-  "n": 12,
-  "tool_selection_exact": 0.9166666666666666,
+  "n": 17,
+  "tool_selection_exact": 1.0,
   "required_tool_recall": 1.0,
   "rows": [
     {
@@ -13,7 +13,7 @@
       ],
       "exact": true,
       "recall": true,
-      "latency_ms": 8047,
+      "latency_ms": 9512,
       "error": null
     },
     {
@@ -26,7 +26,7 @@
       ],
       "exact": true,
       "recall": true,
-      "latency_ms": 8137,
+      "latency_ms": 7603,
       "error": null
     },
     {
@@ -39,7 +39,7 @@
       ],
       "exact": true,
       "recall": true,
-      "latency_ms": 6160,
+      "latency_ms": 5901,
       "error": null
     },
     {
@@ -52,7 +52,7 @@
       ],
       "exact": true,
       "recall": true,
-      "latency_ms": 7949,
+      "latency_ms": 8140,
       "error": null
     },
     {
@@ -65,7 +65,7 @@
       ],
       "exact": true,
       "recall": true,
-      "latency_ms": 1636,
+      "latency_ms": 2178,
       "error": null
     },
     {
@@ -78,7 +78,7 @@
       ],
       "exact": true,
       "recall": true,
-      "latency_ms": 2797,
+      "latency_ms": 1854,
       "error": null
     },
     {
@@ -91,7 +91,7 @@
       ],
       "exact": true,
       "recall": true,
-      "latency_ms": 1845,
+      "latency_ms": 1784,
       "error": null
     },
     {
@@ -104,7 +104,7 @@
       ],
       "exact": true,
       "recall": true,
-      "latency_ms": 2877,
+      "latency_ms": 2842,
       "error": null
     },
     {
@@ -117,7 +117,7 @@
       ],
       "exact": true,
       "recall": true,
-      "latency_ms": 2243,
+      "latency_ms": 3262,
       "error": null
     },
     {
@@ -132,18 +132,16 @@
       ],
       "exact": true,
       "recall": true,
-      "latency_ms": 7135,
+      "latency_ms": 7423,
       "error": null
     },
     {
       "id": "ag-11",
       "expected": [],
-      "used": [
-        "list_doc_topics"
-      ],
-      "exact": false,
+      "used": [],
+      "exact": true,
       "recall": true,
-      "latency_ms": 3084,
+      "latency_ms": 2140,
       "error": null
     },
     {
@@ -152,7 +150,52 @@
       "used": [],
       "exact": true,
       "recall": true,
-      "latency_ms": 802,
+      "latency_ms": 1200,
+      "error": null
+    },
+    {
+      "id": "ag-13",
+      "expected": [],
+      "used": [],
+      "exact": true,
+      "recall": true,
+      "latency_ms": 1052,
+      "error": null
+    },
+    {
+      "id": "ag-14",
+      "expected": [],
+      "used": [],
+      "exact": true,
+      "recall": true,
+      "latency_ms": 1222,
+      "error": null
+    },
+    {
+      "id": "ag-15",
+      "expected": [],
+      "used": [],
+      "exact": true,
+      "recall": true,
+      "latency_ms": 1287,
+      "error": null
+    },
+    {
+      "id": "ag-16",
+      "expected": [],
+      "used": [],
+      "exact": true,
+      "recall": true,
+      "latency_ms": 1129,
+      "error": null
+    },
+    {
+      "id": "ag-17",
+      "expected": [],
+      "used": [],
+      "exact": true,
+      "recall": true,
+      "latency_ms": 980,
       "error": null
     }
   ]

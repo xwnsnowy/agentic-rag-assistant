@@ -1,7 +1,7 @@
 # Agent tool-selection eval
 
-- items: 12
-- **tool-selection accuracy (exact set match): 0.917**
+- items: 17
+- **tool-selection accuracy (exact set match): 1.000**
 - required-tool recall: 1.000
 
 | id | expected | used | exact |
@@ -16,5 +16,10 @@
 | ag-08 | list_doc_topics | list_doc_topics | ✓ |
 | ag-09 | list_doc_topics | list_doc_topics | ✓ |
 | ag-10 | calculator, rag_search | calculator, rag_search | ✓ |
-| ag-11 | (none) | list_doc_topics | ✗ |
+| ag-11 | (none) | (none) | ✓ |
 | ag-12 | (none) | (none) | ✓ |
+| ag-13 | (none) | (none) | ✓ |
+| ag-14 | (none) | (none) | ✓ |
+| ag-15 | (none) | (none) | ✓ |
+| ag-16 | (none) | (none) | ✓ |
+| ag-17 | (none) | (none) | ✓ |

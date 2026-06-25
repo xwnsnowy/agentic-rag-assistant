@@ -88,7 +88,7 @@ export function renderOgImage(): ImageResponse {
         <div style={{ display: "flex", gap: "16px" }}>
           {[
             "hit@5 1.00",
-            "tool accuracy 0.917",
+            "tool accuracy 1.00",
             "0 injection leaks",
             "eval-first",
           ].map((chip) => (
