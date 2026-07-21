@@ -81,16 +81,17 @@ def keyword_search(query: str, k: int = 5) -> list[Result]:
     ]
 
 
-def hybrid_search(query: str, k: int = 5, *, pool: int = 20, rrf_k: int = 60) -> list[Result]:
-    """Reciprocal Rank Fusion of vector + keyword rankings.
+def rrf_fuse(vec: list[Result], kw: list[Result], *, rrf_k: int = 60) -> list[Result]:
+    """Fuse a vector ranking and a keyword ranking with Reciprocal Rank Fusion.
 
-    Each method contributes 1 / (rrf_k + rank). We pull `pool` candidates from
-    each, fuse, and return the top-k. rrf_k=60 is the common default that damps
+    Pure function (no I/O) so the fusion math is unit-testable without Postgres.
+
+    Why RRF: it merges rankings using only rank position, so we don't have to
+    calibrate cosine scores against ts_rank scores (different, incompatible
+    scales). Each method contributes 1 / (rrf_k + rank); a chunk found by both
+    methods sums both contributions. rrf_k=60 is the common default that damps
     the weight of very high ranks.
     """
-    vec = vector_search(query, pool)
-    kw = keyword_search(query, pool)
-
     merged: dict[int, Result] = {}
     for r in vec:
         merged[r.chunk_id] = r
@@ -109,5 +110,11 @@ def hybrid_search(query: str, k: int = 5, *, pool: int = 20, rrf_k: int = 60) ->
             score += 1.0 / (rrf_k + r.keyword_rank)
         r.rrf_score = score
 
-    ranked = sorted(merged.values(), key=lambda r: r.rrf_score or 0.0, reverse=True)
-    return ranked[:k]
+    # sorted() is stable: ties keep insertion order (vector hits, then keyword-only).
+    return sorted(merged.values(), key=lambda r: r.rrf_score or 0.0, reverse=True)
+
+
+def hybrid_search(query: str, k: int = 5, *, pool: int = 20, rrf_k: int = 60) -> list[Result]:
+    """Hybrid retrieval: pull `pool` candidates from each of vector + keyword
+    search, fuse the two rankings with RRF (see rrf_fuse), return the top-k."""
+    return rrf_fuse(vector_search(query, pool), keyword_search(query, pool), rrf_k=rrf_k)[:k]
