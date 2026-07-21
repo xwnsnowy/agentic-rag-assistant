@@ -1,4 +1,9 @@
-"""Apply migrations/001_init.sql against DATABASE_URL.
+"""Apply every migrations/*.sql against DATABASE_URL, in filename order.
+
+Simplest runner that works: every migration file is idempotent (IF NOT EXISTS
+everywhere), so we just re-apply all of them on each run — no schema_migrations
+bookkeeping table, no Alembic. That trade-off holds as long as migrations stay
+idempotent; revisit only if one ever can't be.
 
 Usage (from ai/):  python -m scripts.init_db
 """
@@ -11,16 +16,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.db import get_connection  # noqa: E402
 
-MIGRATION = Path(__file__).resolve().parents[1] / "migrations" / "001_init.sql"
+MIGRATIONS_DIR = Path(__file__).resolve().parents[1] / "migrations"
 
 
 def main() -> None:
-    sql = MIGRATION.read_text(encoding="utf-8")
+    migrations = sorted(MIGRATIONS_DIR.glob("*.sql"))
+    if not migrations:
+        raise SystemExit(f"No .sql files found in {MIGRATIONS_DIR}")
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute(sql)
+            for path in migrations:
+                cur.execute(path.read_text(encoding="utf-8"))
+                print(f"Applied migration: {path.name}")
         conn.commit()
-    print(f"Applied migration: {MIGRATION.name}")
 
 
 if __name__ == "__main__":
