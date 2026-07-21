@@ -15,6 +15,7 @@ from __future__ import annotations
 import ast
 import contextvars
 import json
+import math
 import operator
 from dataclasses import asdict
 from pathlib import Path
@@ -107,9 +108,33 @@ def rag_search(query: str) -> str:
 
 
 # Safe arithmetic: evaluate a tiny AST whitelist, never Python's eval().
+#
+# Exponentiation needs a magnitude guard on top of the whitelist: Python ints
+# are arbitrary-precision, so "9**9**9**9" is *safe* but not *cheap* — a single
+# intermediate like 9**387420489 burns CPU for as long as we let it, which is a
+# denial-of-service surface on a public endpoint (the agent calls this tool on
+# user input). The guard estimates the result's bit length as
+# |exp| * log2(|base|) BEFORE computing the power — O(1), so hostile input is
+# rejected in microseconds — and caps it at ~1000 bits (~300 decimal digits).
+# That is far beyond any arithmetic a user genuinely asks ("2**16", "1.5**3",
+# even 2**1000 passes) and also keeps the returned number small: the result
+# string goes straight back into the agent's context.
+_MAX_POW_BITS = 1000
+
+
+class _PowTooLargeError(ValueError):
+    """Raised when an exponentiation would exceed _MAX_POW_BITS."""
+
+
+def _checked_pow(base, exp):
+    if abs(base) > 1 and abs(exp) * math.log2(abs(base)) > _MAX_POW_BITS:
+        raise _PowTooLargeError
+    return operator.pow(base, exp)
+
+
 _OPS = {
     ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul,
-    ast.Div: operator.truediv, ast.Pow: operator.pow, ast.Mod: operator.mod,
+    ast.Div: operator.truediv, ast.Pow: _checked_pow, ast.Mod: operator.mod,
     ast.USub: operator.neg, ast.UAdd: operator.pos, ast.FloorDiv: operator.floordiv,
 }
 
@@ -132,6 +157,13 @@ def calculator(expression: str) -> str:
     """
     try:
         return str(_eval_node(ast.parse(expression, mode="eval").body))
+    except _PowTooLargeError:
+        # Same "Could not evaluate" shape as every other failure, plus the
+        # reason, so the agent can relay WHY instead of just shrugging.
+        return (
+            f"Could not evaluate expression: {expression!r} "
+            "(the result of an exponentiation would be too large)"
+        )
     except Exception:  # noqa: BLE001 - return a clean error the agent can relay
         return f"Could not evaluate expression: {expression!r}"
 

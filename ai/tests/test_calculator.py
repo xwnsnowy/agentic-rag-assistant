@@ -52,3 +52,43 @@ def test_rejects_function_calls_and_statements():
 def test_division_by_zero_returns_clean_message():
     out = calc("1 / 0")
     assert out == "Could not evaluate expression: '1 / 0'"  # message, not a raise
+
+
+# --- exponentiation bound ----------------------------------------------------
+# ast.Pow is whitelisted, but Python ints are arbitrary-precision: without a
+# magnitude guard, "9**9**9**9" makes the tool compute a number with hundreds
+# of millions of digits — a CPU denial-of-service inside an agent turn. The
+# guard estimates the result's bit length (|exp| * log2|base|) BEFORE
+# computing, so rejection cost does not depend on the requested size.
+
+
+def test_ordinary_exponentiation_still_works():
+    assert calc("2**16") == "65536"
+    assert calc("1.5**3") == "3.375"
+    assert calc("2 * (3 + 4) ** 2") == "98"
+    assert calc("(-2)**10") == "1024"
+    assert calc("0.5**2000") == "0.0"  # |base| <= 1 can never explode
+    assert calc("1**999999999") == "1"
+    # The documented cap (~1000 bits): 2**1000 is the largest power of two allowed.
+    assert calc("2**1000") == str(2**1000)
+
+
+def test_oversized_exponentiation_is_rejected_with_reason():
+    out = calc("9**999999")
+    assert out.startswith("Could not evaluate expression")
+    assert "too large" in out
+    # Nested towers are caught at the first oversized intermediate step.
+    assert "too large" in calc("2**500**2")
+
+
+def test_oversized_exponentiation_rejects_fast():
+    # The guard must trigger BEFORE any big-int work happens. If it ever
+    # regressed to computing first, this would hang for (astronomically) longer
+    # than the suite timeout — 9**9**9**9's intermediate alone is ~1.9e8 digits.
+    import time
+
+    t0 = time.perf_counter()
+    out = calc("9**9**9**9")
+    elapsed = time.perf_counter() - t0
+    assert "too large" in out
+    assert elapsed < 1.0  # microseconds in practice; 1s is a generous ceiling
