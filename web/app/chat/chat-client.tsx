@@ -12,11 +12,12 @@ import {
   Plus,
   Send,
 } from "lucide-react";
-import { API_URL, ask, runAgentStream, type Citation } from "@/lib/api";
+import { API_URL, ask, runAgentStream, type Citation, type NodeEvent } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Markdown } from "@/components/markdown";
 import { AiMascot } from "@/components/ai-mascot";
+import { AgentGraph } from "@/components/agent-graph";
 import { cn } from "@/lib/utils";
 
 type Mode = "agent" | "rag";
@@ -27,6 +28,7 @@ type Turn = {
   answer: string | null;
   citations: Citation[];
   toolsUsed: string[];
+  nodes: NodeEvent[]; // graph lifecycle events (incl. synthesized ones), agent mode only
 };
 
 const CONFIGS = ["hybrid+rerank", "hybrid", "baseline", "keyword"];
@@ -101,21 +103,60 @@ export default function ChatApp() {
           created = true;
           setThinking(false);
           setTurns((t) => [
-            { question: q, label: "agent", answer: "", citations: [], toolsUsed: [] },
+            { question: q, label: "agent", answer: "", citations: [], toolsUsed: [], nodes: [] },
             ...t,
           ]);
         };
         const patchTop = (fn: (top: Turn) => Turn) =>
           setTurns((t) => (t.length ? [fn(t[0]), ...t.slice(1)] : t));
 
+        // The raw node events under-report what's visually true (measured
+        // realities of stream_mode=["messages","updates"]), so we synthesize
+        // two events the graph needs; the chat client owns this inference so
+        // <AgentGraph> itself stays graph-agnostic:
+        //  - `node(tools:active)` only arrives at tool COMPLETION (messages
+        //    mode surfaces the tools node when its ToolMessage is emitted), so
+        //    the multi-second retrieval would show no lit node. We infer tools
+        //    is running from the `agent:done` that follows a `tools` event.
+        //  - `active` is deduped per turn: the answer round after tools emits
+        //    no second `agent:active`, so we re-light agent on its first
+        //    output after `tools:done`.
+        let toolsCallPending = false; // agent announced tool calls; tools node not done yet
+        let agentNeedsRelight = false; // tools finished; agent is running again unannounced
+        const pushNode = (n: NodeEvent) => {
+          ensureTurn();
+          patchTop((top) => ({ ...top, nodes: [...top.nodes, n] }));
+        };
+        const relightAgent = () => {
+          if (!agentNeedsRelight) return;
+          agentNeedsRelight = false;
+          pushNode({ name: "agent", status: "active" });
+        };
+
         await runAgentStream(q, tid, {
           onTools: (tools) => {
+            relightAgent(); // a later round planning more tool calls
+            toolsCallPending = true;
             ensureTurn();
             patchTop((top) => ({ ...top, toolsUsed: tools }));
           },
           onToken: (delta) => {
+            relightAgent(); // answer round streaming after tools finished
             ensureTurn();
             patchTop((top) => ({ ...top, answer: (top.answer ?? "") + delta }));
+          },
+          onNode: (ev) => {
+            pushNode(ev);
+            if (ev.name === "agent" && ev.status === "done" && toolsCallPending) {
+              // Tool calls were announced and tools hasn't finished: the tools
+              // node is running right now, even though its own "active" event
+              // won't arrive until it completes.
+              pushNode({ name: "tools", status: "active" });
+            }
+            if (ev.name === "tools" && ev.status === "done") {
+              toolsCallPending = false;
+              agentNeedsRelight = true;
+            }
           },
           onCitations: (citations) => {
             ensureTurn();
@@ -129,7 +170,7 @@ export default function ChatApp() {
       } else {
         const res = await ask(q, config);
         setTurns((t) => [
-          { question: q, label: res.config, answer: res.answer, citations: res.citations, toolsUsed: [] },
+          { question: q, label: res.config, answer: res.answer, citations: res.citations, toolsUsed: [], nodes: [] },
           ...t,
         ]);
       }
@@ -302,6 +343,9 @@ export default function ChatApp() {
                 className="size-9 flex-none"
               />
               <div className="min-w-0 flex-1">
+                {/* Live view of the LangGraph run — doubles as a richer
+                    "thinking" indicator while nodes light up in causal order. */}
+                {t.nodes.length > 0 && <AgentGraph events={t.nodes} className="mb-2.5" />}
                 {t.toolsUsed.length > 0 && (
                   <div className="mb-2.5 flex flex-wrap gap-1.5">
                     {dedupeTools(t.toolsUsed).map((tool, j) => {
