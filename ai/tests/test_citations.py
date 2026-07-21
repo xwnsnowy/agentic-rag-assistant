@@ -11,6 +11,7 @@ Pure: retrieval is monkeypatched, so no DB / embeddings / API keys.
 
 import app.tools as tools_mod
 from app.agent import _citations_for
+from app.pipeline import RetrievalTrace
 from app.retrieval import Result
 from app.tools import begin_citation_capture, rag_search
 
@@ -70,9 +71,19 @@ def _fake_results(ids: list[int]) -> list[Result]:
     ]
 
 
+def _trace(query: str) -> RetrievalTrace:
+    """Minimal trace; rag_search only forwards it to the debug sink."""
+    return RetrievalTrace(
+        query=query, rewritten_query=None, pool=[], final_ids=[],
+        timings_ms={"retrieve": 0.0, "rerank": None},
+    )
+
+
 def test_rag_search_numbers_globally_across_calls_and_fills_sink(monkeypatch):
     calls = iter([_fake_results([10, 11]), _fake_results([12])])
-    monkeypatch.setattr(tools_mod, "retrieve", lambda q, cfg: next(calls))
+    monkeypatch.setattr(
+        tools_mod, "retrieve_with_trace", lambda q, cfg: (next(calls), _trace(q))
+    )
 
     sink = begin_citation_capture()
     out1 = rag_search.invoke({"query": "first"})
@@ -92,15 +103,18 @@ def test_rag_search_numbers_globally_across_calls_and_fills_sink(monkeypatch):
 
 
 def test_rag_search_without_capture_numbers_from_one(monkeypatch):
-    monkeypatch.setattr(tools_mod, "retrieve", lambda q, cfg: _fake_results([42]))
-    # Standalone path (MCP server / direct call): no sink, numbering restarts at 1.
+    monkeypatch.setattr(
+        tools_mod, "retrieve_with_trace", lambda q, cfg: (_fake_results([42]), _trace(q))
+    )
+    # Standalone path (MCP server / direct call): no sinks, numbering restarts at 1.
     tools_mod._citation_sink.set(None)
+    tools_mod._debug_sink.set(None)
     out = rag_search.invoke({"query": "standalone"})
     assert out.startswith("[1] Page 42")
 
 
 def test_rag_search_empty_results_message(monkeypatch):
-    monkeypatch.setattr(tools_mod, "retrieve", lambda q, cfg: [])
+    monkeypatch.setattr(tools_mod, "retrieve_with_trace", lambda q, cfg: ([], _trace(q)))
     assert rag_search.invoke({"query": "nothing"}) == (
         "No relevant passages found in the LangGraph documentation."
     )

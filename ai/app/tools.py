@@ -16,11 +16,12 @@ import ast
 import contextvars
 import json
 import operator
+from dataclasses import asdict
 from pathlib import Path
 
 from langchain_core.tools import tool
 
-from app.pipeline import HYBRID_RERANK, retrieve
+from app.pipeline import HYBRID_RERANK, retrieve_with_trace
 
 _MANIFEST = Path(__file__).resolve().parents[1] / "data" / "manifest.json"
 
@@ -43,6 +44,26 @@ def begin_citation_capture() -> list:
     return sink
 
 
+# Per-turn retrieval-trace capture — the _citation_sink pattern again, for a
+# different payload. rag_search's return STRING is a frozen contract (it is
+# what the agent prompt was tuned on, what MCP clients receive, and it already
+# costs ~5 passages of agent context — 20 scored pool entries would bloat it
+# for zero answer quality). So the structured trace leaves out-of-band through
+# this sink instead of in-band through the return value. Set per turn via
+# begin_debug_capture(); when unset (MCP server, direct calls, eval) nothing
+# is captured and behaviour is byte-identical.
+_debug_sink: contextvars.ContextVar[list | None] = contextvars.ContextVar(
+    "debug_sink", default=None
+)
+
+
+def begin_debug_capture() -> list:
+    """Start a fresh debug (retrieval-trace) sink for the current turn; returns the list."""
+    sink: list = []
+    _debug_sink.set(sink)
+    return sink
+
+
 @tool
 def rag_search(query: str) -> str:
     """Search the LangGraph v1.0 documentation for an answer.
@@ -50,14 +71,19 @@ def rag_search(query: str) -> str:
     Use this for any question about LangGraph concepts, APIs, or how-to. Returns
     numbered passages with their source URLs so the answer can cite them as [n].
     """
-    results = retrieve(query, HYBRID_RERANK)
+    results, trace = retrieve_with_trace(query, HYBRID_RERANK)
+    debug = _debug_sink.get()
     if not results:
+        if debug is not None:
+            debug.append({"tool_call_query": query, "citation_ns": [], **asdict(trace)})
         return "No relevant passages found in the LangGraph documentation."
     sink = _citation_sink.get()
     start = len(sink) if sink is not None else 0  # continue numbering across calls
     blocks = []
+    citation_ns: list[int] = []
     for i, r in enumerate(results):
         n = start + i + 1
+        citation_ns.append(n)
         m = r.metadata or {}
         if sink is not None:
             sink.append(
@@ -73,6 +99,10 @@ def rag_search(query: str) -> str:
             f"[{n}] {m.get('page_title', '?')} — {m.get('heading', '')}\n"
             f"URL: {m.get('source_url', '')}\n{r.content}"
         )
+    if debug is not None:
+        # citation_ns lets the UI badge pool rows that made it into the answer's
+        # [n] markers; the rest of the entry is the serialized RetrievalTrace.
+        debug.append({"tool_call_query": query, "citation_ns": citation_ns, **asdict(trace)})
     return "\n\n---\n\n".join(blocks)
 
 
