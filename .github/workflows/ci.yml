@@ -26,7 +26,7 @@ jobs:
       - run: pnpm run build
 
   ai:
-    name: ai · syntax check
+    name: ai · syntax check + tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -36,8 +36,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      # Compile-only check (no heavy deps install): catches syntax errors fast.
+          cache: pip
+          cache-dependency-path: |
+            ai/requirements.txt
+            ai/requirements-dev.txt
+      # Compile-only check first (no deps needed): catches syntax errors fast.
       - run: python -m compileall -q app scripts eval
+      # Unit tests (pure: no DB / network / keys). pytest comes from
+      # requirements-dev.txt so the Docker image / Render deploy stay lean.
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - run: python -m pytest tests -q
 
   docker:
     name: ai · docker build + smoke-test

@@ -133,6 +133,7 @@ is the first place to look for how to run anything.
 - ragas eval: `cd ai && python -m scripts.export_for_ragas` then `.venv-ragas\Scripts\python -m eval.ragas_eval` (real Ragas lib in an isolated py3.12 venv — needs `requirements-ragas.txt`; see ai/eval/README.md for why it's separate)
 - ingest corpus: `cd ai && python -m scripts.ingest` (chunk -> embed -> upsert; re-runnable)
 - mcp server: `cd ai && python -m app.mcp_server` (exposes rag_search/calculator/list_doc_topics over MCP via stdio, for Claude Desktop / MCP clients; reuses app.tools)
+- ai tests: `cd ai && python -m pytest tests -q` (pure unit tests — chunker, RRF fusion, calculator whitelist, citation mapping; no DB/network/keys needed. Install dev deps first: `pip install -r requirements-dev.txt`)
 - lint/format: _(TODO once configured)_
 
 ## Reference files
