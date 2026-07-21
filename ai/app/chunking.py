@@ -5,11 +5,19 @@ Rules (from CLAUDE.md):
   - Keep the heading together with its content.
   - Attach metadata per chunk: page title, section breadcrumb, source URL (+anchor).
 
-The corpus is Mintlify-flavoured markdown (.md). We strip the injected
+The v1.0 corpus is Mintlify-flavoured markdown (.md). We strip the injected
 "Documentation Index" blockquote, drop standalone MDX wrapper tags / anchors
 (remembering the anchor id for deep-link citations), then split on H1/H2/H3
 boundaries. Long sections are further packed to a size budget, but a fenced code
 block is always treated as one atomic unit and never broken.
+
+The v0.2 corpus (GitHub repo at the pinned 0.2 tag) is mkdocs-material
+markdown, which carries markup Mintlify pages don't: `=== "Title"` content
+tabs, `!!! note` / `??? "Title"` admonitions, with bodies indented 4 spaces.
+`preprocess_mkdocs()` flattens those (marker line -> a bold label, body
+dedented, applied recursively for nesting) so heading/code chunking works
+unchanged. It is OPT-IN via chunk_markdown(..., mkdocs=True): the v1.0 path
+never runs it, so v1.0 output stays byte-identical by construction.
 """
 
 from __future__ import annotations
@@ -46,6 +54,124 @@ class Chunk:
     @property
     def char_len(self) -> int:
         return len(self.content)
+
+
+# mkdocs-material markers, only meaningful at column 0 (nested ones surface at
+# column 0 after their parent's body is dedented, then recursion catches them).
+MKDOCS_TAB_RE = re.compile(r'^===\s+"(.+)"\s*$')
+MKDOCS_ADMONITION_RE = re.compile(r"^(?:!!!|\?\?\?\+?)(?:\s+(.*))?$")
+_ADMONITION_TYPED_RE = re.compile(r'^([\w-]+)(?:\s+"?(.*?)"?)?\s*$')
+_ADMONITION_QUOTED_RE = re.compile(r'^"(.*)"\s*$')
+
+
+def _admonition_label(rest: str | None) -> str:
+    """Turn the text after !!!/??? into a short bold-able label.
+
+    Real shapes in the fetched 0.2 files: `!!! note`, `!!! Note`, `!!! tip
+    "Title..."`, `!!! note Note` (unquoted title), `??? "Full Code"` (title
+    only). mkdocs renders the quoted title as the admonition header (the type
+    is just styling), so we prefer the title and fall back to the type."""
+    rest = (rest or "").strip()
+    if not rest:
+        return "Note"
+    qm = _ADMONITION_QUOTED_RE.match(rest)
+    if qm:
+        return qm.group(1)
+    tm = _ADMONITION_TYPED_RE.match(rest)
+    if not tm:
+        return rest
+    kind, title = tm.group(1), (tm.group(2) or "").strip()
+    if not title:
+        return kind.capitalize()
+    if kind.lower() in title.lower():
+        return title  # e.g. `!!! note Note`, `??? node "NodeInterrupt ..."`
+    return f"{kind.capitalize()}: {title}"
+
+
+def _collect_indented_body(lines: list[str], i: int) -> tuple[list[str], int]:
+    """Collect the 4-space-indented body that follows a tab/admonition marker.
+
+    Fence-aware: once inside a fenced code block that started in the body, every
+    line belongs to the body until the fence closes, regardless of indentation."""
+    body: list[str] = []
+    fence: str | None = None
+    while i < len(lines):
+        line = lines[i]
+        if fence is not None:
+            body.append(line)
+            m = FENCE_RE.match(line)
+            if m and m.group(2)[0] == fence:
+                fence = None
+            i += 1
+            continue
+        if line.strip() == "":
+            body.append(line)
+            i += 1
+            continue
+        if line.startswith("    "):
+            m = FENCE_RE.match(line)
+            if m:
+                fence = m.group(2)[0]
+            body.append(line)
+            i += 1
+            continue
+        break  # first non-blank line at indent < 4 ends the body
+    return body, i
+
+
+def _dedent4(lines: list[str]) -> list[str]:
+    return [line[4:] if line.startswith("    ") else line for line in lines]
+
+
+def _mkdocs_transform(lines: list[str]) -> list[str]:
+    out: list[str] = []
+    fence: str | None = None
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        m = FENCE_RE.match(line)
+        if m:
+            marker = m.group(2)[0]
+            if fence is None:
+                fence = marker
+            elif marker == fence:
+                fence = None
+            out.append(line)
+            i += 1
+            continue
+        if fence is not None:
+            out.append(line)
+            i += 1
+            continue
+
+        tab = MKDOCS_TAB_RE.match(line)
+        adm = MKDOCS_ADMONITION_RE.match(line) if not tab else None
+        if tab or adm:
+            label = tab.group(1) if tab else _admonition_label(adm.group(1))
+            body, i = _collect_indented_body(lines, i + 1)
+            # Recurse so a marker nested inside this body (now at column 0
+            # after dedenting) is transformed too.
+            body = _mkdocs_transform(_dedent4(body))
+            if not label.startswith("**"):  # some titles are already bold
+                label = f"**{label}**"
+            out.extend([label, ""])
+            out.extend(body)
+            continue
+
+        out.append(line)
+        i += 1
+    return out
+
+
+def preprocess_mkdocs(md: str) -> str:
+    """Flatten mkdocs-material tabs/admonitions into plain markdown.
+
+    A no-op on markdown without those markers (asserted by tests on a verbatim
+    v1.0 excerpt)."""
+    out = "\n".join(_mkdocs_transform(md.splitlines()))
+    if md.endswith("\n") and not out.endswith("\n"):
+        out += "\n"  # splitlines/join would otherwise eat the final newline
+    return out
 
 
 def clean_heading_text(text: str) -> str:
@@ -209,8 +335,14 @@ def chunk_markdown(
     split_levels: tuple[int, ...] = SPLIT_LEVELS,
     max_chars: int = MAX_CHARS,
     min_chars: int = MIN_CHARS,
+    mkdocs: bool = False,
 ) -> list[Chunk]:
-    """Split one markdown document into heading-based chunks with metadata."""
+    """Split one markdown document into heading-based chunks with metadata.
+
+    mkdocs=True first flattens mkdocs-material tabs/admonitions (the v0.2
+    corpus); the default leaves v1.0 (Mintlify) input untouched."""
+    if mkdocs:
+        md = preprocess_mkdocs(md)
     lines = _strip_doc_index(md.splitlines())
     parsed_title, sections = _split_sections(lines, split_levels)
     title = page_title or parsed_title or source_url
