@@ -34,7 +34,7 @@ from langgraph.prebuilt import ToolNode
 
 from app import observability as obs
 from app.config import get_settings
-from app.tools import TOOLS, begin_citation_capture
+from app.tools import TOOLS, begin_citation_capture, begin_debug_capture
 
 MAX_TOOL_ROUNDS = 4
 MAX_QUESTION_CHARS = 2000
@@ -81,6 +81,9 @@ class AgentResult:
     rounds: int = 0
     thread_id: str = ""
     citations: list[dict] = field(default_factory=list)  # sources cited as [n]
+    # One serialized RetrievalTrace per rag_search call this turn (S1.2) —
+    # handy for curl debugging of the non-streaming endpoint.
+    retrieval_traces: list[dict] = field(default_factory=list)
 
 
 # Short-term memory across turns. MemorySaver is process-local (fine for the
@@ -145,6 +148,7 @@ def run_agent(question: str, thread_id: str | None = None) -> AgentResult:
 
     callbacks = _tracing_callbacks()
     sink = begin_citation_capture()
+    debug = begin_debug_capture()
 
     state = _graph().invoke(
         {"messages": [HumanMessage(content=q)]},
@@ -180,6 +184,7 @@ def run_agent(question: str, thread_id: str | None = None) -> AgentResult:
         rounds=rounds,
         thread_id=tid,
         citations=_citations_for(answer, sink),
+        retrieval_traces=list(debug),
     )
 
 
@@ -187,14 +192,27 @@ async def astream_agent(question: str, thread_id: str | None = None):
     """Stream the agent run token-by-token for a live UI.
 
     Yields plain dict events (the HTTP layer serialises them as SSE):
-      {"type": "tools", "v": [...]}  tool name(s) as the agent decides to call them
-      {"type": "token", "v": "..."}  a chunk of the final answer text
+      {"type": "tools",     "v": [...]}  tool name(s) as the agent decides to call them
+      {"type": "token",     "v": "..."}  a chunk of the final answer text
+      {"type": "node",      "v": {"name": ..., "status": "active" | "done"}}
+      {"type": "retrieval", "v": {...}}  one serialized RetrievalTrace per rag_search call
+      {"type": "citations", "v": [...]}  sources the answer cites as [n]
       {"type": "done",  "thread_id": ..., "tools_used": [...]}
 
-    We use LangGraph's stream_mode="messages", which surfaces the LLM's token
-    chunks as they're generated. Tool-planning chunks carry tool-call deltas but
-    empty text; the final-answer round carries text — so filtering on non-empty
-    content naturally streams just the answer, not the intermediate reasoning.
+    Streaming modes (S1.2): stream_mode=["messages", "updates"] makes the
+    iterator yield (mode, payload) tuples.
+      - "messages" surfaces LLM token chunks as they're generated, with metadata
+        naming the node they came from. Tool-planning chunks carry tool-call
+        deltas but empty text; the final-answer round carries text — so
+        filtering on non-empty content naturally streams just the answer, not
+        the intermediate reasoning. The first chunk from an unseen node emits a
+        node "active" event.
+      - "updates" fires once per node COMPLETION — that is the node "done"
+        signal, and (for the tools node) the moment the debug sink holds the
+        retrieval trace(s) of the rag_search call(s) that just ran.
+    `node` and `retrieval` are strictly additive: the deployed frontend's
+    dispatch ignores unknown event types, so the tools|token|citations|done
+    sequence and payloads must stay (and do stay) byte-identical.
     """
     tid = thread_id or f"ephemeral-{uuid4().hex}"
     q = (question or "").strip()
@@ -212,33 +230,58 @@ async def astream_agent(question: str, thread_id: str | None = None):
         "recursion_limit": 2 * MAX_TOOL_ROUNDS + 2,
         "callbacks": _tracing_callbacks(),
     }
+    # Both sinks are context-local (contextvars). They MUST be set here, in the
+    # same task that iterates the graph below — set from another task, the
+    # tools would see an unset sink and silently capture nothing.
     sink = begin_citation_capture()
+    debug = begin_debug_capture()
 
     tools_used: list[str] = []
     seen: set[tuple] = set()
+    seen_nodes: set[str] = set()
     answer_parts: list[str] = []
-    async for chunk, _meta in _graph().astream(
+    async for mode, payload in _graph().astream(
         {"messages": [HumanMessage(content=q)]},
         config=config,
-        stream_mode="messages",
+        stream_mode=["messages", "updates"],
     ):
-        # Only LLM token chunks — skip ToolMessages, whose .content is tool output.
-        if not isinstance(chunk, AIMessageChunk):
-            continue
-        # Capture tool names as the model emits each tool-call delta.
-        for tc in chunk.tool_call_chunks or []:
-            name, idx = tc.get("name"), tc.get("index")
-            if name and (idx, name) not in seen:
-                seen.add((idx, name))
-                tools_used.append(name)
-                yield {"type": "tools", "v": list(dict.fromkeys(tools_used))}
-        # Stream the answer text.
-        if isinstance(chunk.content, str) and chunk.content:
-            answer_parts.append(chunk.content)
-            yield {"type": "token", "v": chunk.content}
+        if mode == "messages":
+            chunk, meta = payload
+            # First chunk out of a node we haven't seen this turn -> "active".
+            node = meta.get("langgraph_node")
+            if node and node not in seen_nodes:
+                seen_nodes.add(node)
+                yield {"type": "node", "v": {"name": node, "status": "active"}}
+            # Only LLM token chunks — skip ToolMessages, whose .content is tool output.
+            if not isinstance(chunk, AIMessageChunk):
+                continue
+            # Capture tool names as the model emits each tool-call delta.
+            for tc in chunk.tool_call_chunks or []:
+                name, idx = tc.get("name"), tc.get("index")
+                if name and (idx, name) not in seen:
+                    seen.add((idx, name))
+                    tools_used.append(name)
+                    yield {"type": "tools", "v": list(dict.fromkeys(tools_used))}
+            # Stream the answer text.
+            if isinstance(chunk.content, str) and chunk.content:
+                answer_parts.append(chunk.content)
+                yield {"type": "token", "v": chunk.content}
+        elif mode == "updates":
+            # One updates event per completed super-step: {node_name: state_delta}.
+            for node_name in payload:
+                yield {"type": "node", "v": {"name": node_name, "status": "done"}}
+                if node_name == "tools":
+                    # The tools node just finished, so every rag_search it ran
+                    # has deposited its trace in the debug sink. Drain it now:
+                    # one event per trace (a turn can hold several rag_search
+                    # calls — keep them separate, the UI keys them by call).
+                    while debug:
+                        yield {"type": "retrieval", "v": debug.pop(0)}
 
     # Once the full answer text is known, resolve its [n] markers to sources.
     citations = _citations_for("".join(answer_parts), sink)
     if citations:
         yield {"type": "citations", "v": citations}
+    # Synthetic terminal marker so the UI can light END before the stream closes.
+    yield {"type": "node", "v": {"name": "__end__", "status": "done"}}
     yield {"type": "done", "thread_id": tid, "tools_used": list(dict.fromkeys(tools_used))}

@@ -102,6 +102,10 @@ def agent_endpoint(req: AgentRequest):
         "rounds": res.rounds,
         "thread_id": res.thread_id,
         "citations": res.citations,
+        # Additive (S1.2): one serialized RetrievalTrace per rag_search call —
+        # lets you inspect the pool/scores with plain curl. The frontend's
+        # AgentResponse type simply ignores the extra key.
+        "retrieval_traces": res.retrieval_traces,
     }
 
 
@@ -109,7 +113,8 @@ def agent_endpoint(req: AgentRequest):
 async def agent_stream_endpoint(req: AgentRequest):
     """Same as /agent, but streams the answer token-by-token over SSE.
 
-    Each line is `data: {json}\\n\\n` with an event of type token | tools | done.
+    Each line is `data: {json}\\n\\n` with an event of type
+    token | tools | node | retrieval | citations | done.
     The frontend reads the body with a stream reader and appends tokens live.
     """
 
