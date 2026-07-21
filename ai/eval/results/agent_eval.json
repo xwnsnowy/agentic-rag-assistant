@@ -13,7 +13,7 @@
       ],
       "exact": true,
       "recall": true,
-      "latency_ms": 9512,
+      "latency_ms": 13882,
       "error": null
     },
     {
@@ -26,7 +26,7 @@
       ],
       "exact": true,
       "recall": true,
-      "latency_ms": 7603,
+      "latency_ms": 7617,
       "error": null
     },
     {
@@ -39,7 +39,7 @@
       ],
       "exact": true,
       "recall": true,
-      "latency_ms": 5901,
+      "latency_ms": 8642,
       "error": null
     },
     {
@@ -52,7 +52,7 @@
       ],
       "exact": true,
       "recall": true,
-      "latency_ms": 8140,
+      "latency_ms": 12865,
       "error": null
     },
     {
@@ -65,7 +65,7 @@
       ],
       "exact": true,
       "recall": true,
-      "latency_ms": 2178,
+      "latency_ms": 6369,
       "error": null
     },
     {
@@ -78,7 +78,7 @@
       ],
       "exact": true,
       "recall": true,
-      "latency_ms": 1854,
+      "latency_ms": 2552,
       "error": null
     },
     {
@@ -91,7 +91,7 @@
       ],
       "exact": true,
       "recall": true,
-      "latency_ms": 1784,
+      "latency_ms": 2029,
       "error": null
     },
     {
@@ -104,7 +104,7 @@
       ],
       "exact": true,
       "recall": true,
-      "latency_ms": 2842,
+      "latency_ms": 3050,
       "error": null
     },
     {
@@ -117,7 +117,7 @@
       ],
       "exact": true,
       "recall": true,
-      "latency_ms": 3262,
+      "latency_ms": 3125,
       "error": null
     },
     {
@@ -132,7 +132,7 @@
       ],
       "exact": true,
       "recall": true,
-      "latency_ms": 7423,
+      "latency_ms": 8349,
       "error": null
     },
     {
@@ -141,7 +141,7 @@
       "used": [],
       "exact": true,
       "recall": true,
-      "latency_ms": 2140,
+      "latency_ms": 1826,
       "error": null
     },
     {
@@ -150,7 +150,7 @@
       "used": [],
       "exact": true,
       "recall": true,
-      "latency_ms": 1200,
+      "latency_ms": 1374,
       "error": null
     },
     {
@@ -159,7 +159,7 @@
       "used": [],
       "exact": true,
       "recall": true,
-      "latency_ms": 1052,
+      "latency_ms": 1404,
       "error": null
     },
     {
@@ -168,7 +168,7 @@
       "used": [],
       "exact": true,
       "recall": true,
-      "latency_ms": 1222,
+      "latency_ms": 2022,
       "error": null
     },
     {
@@ -177,7 +177,7 @@
       "used": [],
       "exact": true,
       "recall": true,
-      "latency_ms": 1287,
+      "latency_ms": 1205,
       "error": null
     },
     {
@@ -186,7 +186,7 @@
       "used": [],
       "exact": true,
       "recall": true,
-      "latency_ms": 1129,
+      "latency_ms": 3059,
       "error": null
     },
     {
@@ -195,7 +195,7 @@
       "used": [],
       "exact": true,
       "recall": true,
-      "latency_ms": 980,
+      "latency_ms": 1202,
       "error": null
     }
   ]
