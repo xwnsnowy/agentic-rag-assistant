@@ -1,0 +1,2 @@
+# Dev-only dependencies (NOT installed in the Docker image or on Render).
+pytest>=8
