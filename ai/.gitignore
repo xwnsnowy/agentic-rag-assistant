@@ -7,8 +7,9 @@ __pycache__/
 .pytest_cache/
 
 # Raw downloaded corpus (reproducible via scripts/fetch_corpus.py).
-# manifest.json IS committed for provenance.
+# manifest.json / manifest-0.2.json ARE committed for provenance.
 data/raw/
+data/raw-0.2/
 
 # Eval artifacts. The published result tables (eval_real.*, agent_eval.*,
 # injection_eval.*, ragas_scores.*) ARE committed — they're the evidence the

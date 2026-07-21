@@ -1,0 +1,91 @@
+{
+  "corpus": "LangGraph documentation (v0.2 concepts)",
+  "docs_version": "0.2.76",
+  "source_index": "https://raw.githubusercontent.com/langchain-ai/langgraph/0.2.76/docs/docs/concepts",
+  "fetched_at": "2026-07-21T18:25:04.897328+00:00",
+  "doc_count": 10,
+  "total_bytes": 161084,
+  "files": [
+    {
+      "title": "Why LangGraph?",
+      "slug": "high_level",
+      "url": "https://github.com/langchain-ai/langgraph/blob/0.2.76/docs/docs/concepts/high_level.md",
+      "md_url": "https://raw.githubusercontent.com/langchain-ai/langgraph/0.2.76/docs/docs/concepts/high_level.md",
+      "path": "data\\raw-0.2\\high_level.md",
+      "bytes": 2674
+    },
+    {
+      "title": "LangGraph Glossary",
+      "slug": "low_level",
+      "url": "https://github.com/langchain-ai/langgraph/blob/0.2.76/docs/docs/concepts/low_level.md",
+      "md_url": "https://raw.githubusercontent.com/langchain-ai/langgraph/0.2.76/docs/docs/concepts/low_level.md",
+      "path": "data\\raw-0.2\\low_level.md",
+      "bytes": 33774
+    },
+    {
+      "title": "Agent architectures",
+      "slug": "agentic_concepts",
+      "url": "https://github.com/langchain-ai/langgraph/blob/0.2.76/docs/docs/concepts/agentic_concepts.md",
+      "md_url": "https://raw.githubusercontent.com/langchain-ai/langgraph/0.2.76/docs/docs/concepts/agentic_concepts.md",
+      "path": "data\\raw-0.2\\agentic_concepts.md",
+      "bytes": 9791
+    },
+    {
+      "title": "Streaming",
+      "slug": "streaming",
+      "url": "https://github.com/langchain-ai/langgraph/blob/0.2.76/docs/docs/concepts/streaming.md",
+      "md_url": "https://raw.githubusercontent.com/langchain-ai/langgraph/0.2.76/docs/docs/concepts/streaming.md",
+      "path": "data\\raw-0.2\\streaming.md",
+      "bytes": 4256
+    },
+    {
+      "title": "Persistence",
+      "slug": "persistence",
+      "url": "https://github.com/langchain-ai/langgraph/blob/0.2.76/docs/docs/concepts/persistence.md",
+      "md_url": "https://raw.githubusercontent.com/langchain-ai/langgraph/0.2.76/docs/docs/concepts/persistence.md",
+      "path": "data\\raw-0.2\\persistence.md",
+      "bytes": 24276
+    },
+    {
+      "title": "Memory",
+      "slug": "memory",
+      "url": "https://github.com/langchain-ai/langgraph/blob/0.2.76/docs/docs/concepts/memory.md",
+      "md_url": "https://raw.githubusercontent.com/langchain-ai/langgraph/0.2.76/docs/docs/concepts/memory.md",
+      "path": "data\\raw-0.2\\memory.md",
+      "bytes": 27650
+    },
+    {
+      "title": "Human-in-the-loop",
+      "slug": "human_in_the_loop",
+      "url": "https://github.com/langchain-ai/langgraph/blob/0.2.76/docs/docs/concepts/human_in_the_loop.md",
+      "md_url": "https://raw.githubusercontent.com/langchain-ai/langgraph/0.2.76/docs/docs/concepts/human_in_the_loop.md",
+      "path": "data\\raw-0.2\\human_in_the_loop.md",
+      "bytes": 29414
+    },
+    {
+      "title": "Multi-agent Systems",
+      "slug": "multi_agent",
+      "url": "https://github.com/langchain-ai/langgraph/blob/0.2.76/docs/docs/concepts/multi_agent.md",
+      "md_url": "https://raw.githubusercontent.com/langchain-ai/langgraph/0.2.76/docs/docs/concepts/multi_agent.md",
+      "path": "data\\raw-0.2\\multi_agent.md",
+      "bytes": 20244
+    },
+    {
+      "title": "Breakpoints",
+      "slug": "breakpoints",
+      "url": "https://github.com/langchain-ai/langgraph/blob/0.2.76/docs/docs/concepts/breakpoints.md",
+      "md_url": "https://raw.githubusercontent.com/langchain-ai/langgraph/0.2.76/docs/docs/concepts/breakpoints.md",
+      "path": "data\\raw-0.2\\breakpoints.md",
+      "bytes": 6269
+    },
+    {
+      "title": "Time Travel ⏱️",
+      "slug": "time-travel",
+      "url": "https://github.com/langchain-ai/langgraph/blob/0.2.76/docs/docs/concepts/time-travel.md",
+      "md_url": "https://raw.githubusercontent.com/langchain-ai/langgraph/0.2.76/docs/docs/concepts/time-travel.md",
+      "path": "data\\raw-0.2\\time-travel.md",
+      "bytes": 2736
+    }
+  ],
+  "skipped": []
+}
