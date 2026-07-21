@@ -12,6 +12,7 @@ Run locally:  uvicorn app.main:app --reload --port 8000
 """
 
 import json
+import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,6 +26,7 @@ from app.pipeline import CONFIGS, HYBRID_RERANK, answer_question
 
 settings = get_settings()
 _CONFIG_BY_NAME = {c.name: c for c in CONFIGS}
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Agentic RAG — AI Service", version="0.0.1")
 
@@ -55,8 +57,12 @@ def db_health():
     try:
         ok = ping()
         return {"status": "ok" if ok else "error", "database": "reachable"}
-    except Exception as exc:  # noqa: BLE001 - surface the reason to the caller
-        return {"status": "error", "database": "unreachable", "detail": str(exc)}
+    except Exception:  # noqa: BLE001
+        # Never echo the exception to the client: psycopg errors routinely embed
+        # the DSN (host/user, sometimes credentials) and this endpoint is public.
+        # The operator gets the full detail in the server log instead.
+        logger.exception("/db/health: database ping failed")
+        return {"status": "error", "database": "unreachable"}
 
 
 class AskRequest(BaseModel):
