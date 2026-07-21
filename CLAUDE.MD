@@ -118,6 +118,7 @@ is the first place to look for how to run anything.
 
 - web dev: `cd web && NODE_OPTIONS=--use-system-ca pnpm dev` (http://localhost:3000)
 - web build: `cd web && NODE_OPTIONS=--use-system-ca pnpm build`
+- web test: `cd web && NODE_OPTIONS=--use-system-ca pnpm test` (vitest; covers the SSE frame parser in `lib/sse.ts`)
 - web deps: `cd web && NODE_OPTIONS=--use-system-ca pnpm install`
 - ai venv (Windows): `cd ai && python -m venv .venv && .venv\Scripts\Activate.ps1`
 - ai deps: `cd ai && pip install -r requirements.txt`
