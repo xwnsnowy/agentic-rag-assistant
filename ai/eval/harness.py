@@ -148,6 +148,12 @@ def render_markdown(summary: dict) -> str:
 def save(summary: dict) -> Path:
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     tag = "real" if summary["embedding"] == "real" else "fake"
+    # A judge-less run fills only the retrieval columns; the generation ones render
+    # as "—". Writing that over eval_real.md would silently blank the published
+    # faithfulness/relevancy/ctx-* numbers, so retrieval-only runs get their own
+    # file. eval_real.md stays the full table, written only by `run_eval --judge`.
+    if not summary["judged"]:
+        tag += "_retrieval"
     (RESULTS_DIR / f"eval_{tag}.json").write_text(
         json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8"
     )
