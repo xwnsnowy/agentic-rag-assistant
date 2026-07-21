@@ -32,21 +32,26 @@ def rerank(query: str, results: list[Result], top_k: int = 5) -> list[Result]:
     # rate limit, outage), degrade to the input (hybrid) order instead of failing
     # the whole request.
     try:
+        # Ask Cohere to score the WHOLE pool, not just the slice we return.
+        # Cohere bills per search unit (1 query + up to 100 docs = 1 unit), so
+        # scoring 20 costs exactly the same as scoring 5 — and it lets callers
+        # (the retrieval trace) see how every candidate moved under the
+        # cross-encoder, not only the survivors.
         resp = _post_with_backoff(
             settings,
             {
                 "model": settings.rerank_model,
                 "query": query,
                 "documents": [r.content for r in results],
-                "top_n": top_k,
+                "top_n": len(results),
             },
         )
-        out: list[Result] = []
+        ranked: list[Result] = []
         for item in resp.json()["results"]:
             r = results[item["index"]]
             r.rerank_score = float(item["relevance_score"])
-            out.append(r)
-        return out
+            ranked.append(r)
+        return ranked[:top_k]
     except Exception as exc:  # noqa: BLE001 - degrade gracefully
         print(f"[rerank] Cohere unavailable, falling back to hybrid order: {type(exc).__name__}")
         return results[:top_k]
