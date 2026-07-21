@@ -7,17 +7,27 @@ import {
   BarChart3,
   BookOpen,
   Calculator,
+  ChevronRight,
   FolderTree,
   Loader2,
   Plus,
   Send,
+  Square,
 } from "lucide-react";
-import { API_URL, ask, runAgentStream, type Citation, type NodeEvent } from "@/lib/api";
+import {
+  API_URL,
+  ask,
+  runAgentStream,
+  type Citation,
+  type NodeEvent,
+  type RetrievalTrace,
+} from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Markdown } from "@/components/markdown";
 import { AiMascot } from "@/components/ai-mascot";
 import { AgentGraph } from "@/components/agent-graph";
+import { RetrievalInspector } from "@/components/retrieval-inspector";
 import { cn } from "@/lib/utils";
 
 type Mode = "agent" | "rag";
@@ -29,6 +39,7 @@ type Turn = {
   citations: Citation[];
   toolsUsed: string[];
   nodes: NodeEvent[]; // graph lifecycle events (incl. synthesized ones), agent mode only
+  traces: RetrievalTrace[]; // one per rag_search call — feeds "Show work"
 };
 
 const CONFIGS = ["hybrid+rerank", "hybrid", "baseline", "keyword"];
@@ -60,6 +71,8 @@ export default function ChatApp() {
   const [threadId, setThreadId] = useState<string>("");
   const [slow, setSlow] = useState(false);
   const slowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // In-flight agent stream — "New chat" and the stop button abort through it.
+  const abortRef = useRef<AbortController | null>(null);
 
   // Pre-warm the API on load so the first question isn't stuck behind a ~40s
   // cold start (Render free tier spins down when idle).
@@ -81,6 +94,7 @@ export default function ChatApp() {
   }, [loading]);
 
   function newChat() {
+    abortRef.current?.abort(); // don't let an old stream keep writing into the new chat
     setThreadId(typeof crypto !== "undefined" ? crypto.randomUUID() : String(Date.now()));
     setTurns([]);
     setError(null);
@@ -92,8 +106,10 @@ export default function ChatApp() {
     setError(null);
     setLoading(true);
     setThinking(true);
+    const controller = new AbortController();
     try {
       if (mode === "agent") {
+        abortRef.current = controller;
         const tid = threadId || (typeof crypto !== "undefined" ? crypto.randomUUID() : String(Date.now()));
         // Create the (empty) answer turn lazily on the first event, then grow it
         // in place. The streaming turn is always index 0 (composer is locked).
@@ -103,7 +119,7 @@ export default function ChatApp() {
           created = true;
           setThinking(false);
           setTurns((t) => [
-            { question: q, label: "agent", answer: "", citations: [], toolsUsed: [], nodes: [] },
+            { question: q, label: "agent", answer: "", citations: [], toolsUsed: [], nodes: [], traces: [] },
             ...t,
           ]);
         };
@@ -145,6 +161,10 @@ export default function ChatApp() {
             ensureTurn();
             patchTop((top) => ({ ...top, answer: (top.answer ?? "") + delta }));
           },
+          onRetrieval: (trace) => {
+            ensureTurn();
+            patchTop((top) => ({ ...top, traces: [...top.traces, trace] }));
+          },
           onNode: (ev) => {
             pushNode(ev);
             if (ev.name === "agent" && ev.status === "done" && toolsCallPending) {
@@ -166,17 +186,23 @@ export default function ChatApp() {
             ensureTurn();
             setThreadId(thread_id || tid);
           },
-        });
+        }, controller.signal);
       } else {
         const res = await ask(q, config);
         setTurns((t) => [
-          { question: q, label: res.config, answer: res.answer, citations: res.citations, toolsUsed: [], nodes: [] },
+          { question: q, label: res.config, answer: res.answer, citations: res.citations, toolsUsed: [], nodes: [], traces: [] },
           ...t,
         ]);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      // A user-initiated stop (stop button / New chat) is not an error —
+      // whatever streamed so far stays on screen.
+      const aborted =
+        controller.signal.aborted ||
+        (err instanceof DOMException && err.name === "AbortError");
+      if (!aborted) setError(err instanceof Error ? err.message : String(err));
     } finally {
+      if (abortRef.current === controller) abortRef.current = null;
       setLoading(false);
       setThinking(false);
     }
@@ -391,6 +417,31 @@ export default function ChatApp() {
                     ))}
                   </ul>
                 )}
+                {/* "Show work": the retrieval pool + rerank movement, collapsed
+                    by default. A <details> disclosure (keyboard-operable for
+                    free), not a side panel — the page is single-column
+                    mobile-first and most turns won't open it. */}
+                {t.traces.length > 0 && (
+                  <details className="group mt-3 rounded-xl border bg-card/50 px-3.5 py-2.5">
+                    <summary className="flex cursor-pointer select-none list-none items-center gap-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground [&::-webkit-details-marker]:hidden">
+                      <ChevronRight
+                        className="size-3.5 flex-none transition-transform group-open:rotate-90"
+                        aria-hidden
+                      />
+                      Show work
+                      <span className="font-normal text-muted-foreground/60">
+                        · {t.traces.length === 1
+                          ? "1 retrieval call"
+                          : `${t.traces.length} retrieval calls`}
+                      </span>
+                    </summary>
+                    <RetrievalInspector
+                      traces={t.traces}
+                      citations={t.citations}
+                      className="mt-3 border-t border-dashed pt-3"
+                    />
+                  </details>
+                )}
               </div>
             </div>
           </article>
@@ -419,14 +470,29 @@ export default function ChatApp() {
             placeholder="Ask about LangGraph… (e.g. How do reducers work?)"
             className="max-h-32 flex-1 resize-none bg-transparent py-2.5 text-[14.5px] outline-none placeholder:text-muted-foreground/70"
           />
-          <Button
-            type="submit"
-            size="icon"
-            disabled={loading || !input.trim()}
-            className="rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30 hover:opacity-90"
-          >
-            <Send className="size-4" />
-          </Button>
+          {loading && mode === "agent" ? (
+            <Button
+              type="button"
+              size="icon"
+              variant="outline"
+              onClick={() => abortRef.current?.abort()}
+              aria-label="Stop generating"
+              title="Stop generating"
+              className="rounded-xl"
+            >
+              <Square className="size-3.5 fill-current" />
+            </Button>
+          ) : (
+            <Button
+              type="submit"
+              size="icon"
+              disabled={loading || !input.trim()}
+              aria-label="Send"
+              className="rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30 hover:opacity-90"
+            >
+              <Send className="size-4" />
+            </Button>
+          )}
         </form>
         <p className="mt-2.5 text-center text-[11px] text-muted-foreground/70">
           <kbd className="rounded border bg-card px-1.5 py-0.5 font-mono text-[10px]">Enter</kbd> to send ·{" "}
