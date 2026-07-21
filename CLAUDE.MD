@@ -123,16 +123,17 @@ is the first place to look for how to run anything.
 - ai venv (Windows): `cd ai && python -m venv .venv && .venv\Scripts\Activate.ps1`
 - ai deps: `cd ai && pip install -r requirements.txt`
 - ai dev: `cd ai && uvicorn app.main:app --reload --port 8000` (note: module is `app.main`)
-- db migrate: `cd ai && python -m scripts.init_db` (pgvector ext + documents + chunks)
+- db migrate: `cd ai && python -m scripts.init_db` (applies every migrations/*.sql in filename order; all idempotent)
 - db seed/DoD: `cd ai && python -m scripts.seed_chunk` (insert 1 chunk + cosine query)
 - fetch corpus: `cd ai && python -m scripts.fetch_corpus` (LangGraph v1.0 docs -> data/raw/ + manifest.json; pinned tag 1.0.10)
+- fetch corpus v0.2: `cd ai && python -m scripts.fetch_corpus --docs-version 0.2` (10 concepts pages from the GitHub repo at pinned tag 0.2.76 -> data/raw-0.2/ + manifest-0.2.json)
 - eval: `cd ai && python -m scripts.run_eval --judge` (compares keyword/baseline/hybrid/hybrid+rerank; `--judge` adds faithfulness/relevancy via LLM, traced to Langfuse)
 - ask (RAG): `cd ai && python -m scripts.ask "<question>" --config hybrid+rerank`
 - agent ask: `cd ai && python -m scripts.agent_ask "<question>"` (LangGraph agent picks tools: rag_search/calculator/list_doc_topics)
 - agent eval: `cd ai && python -m scripts.run_agent_eval` (tool-selection accuracy over eval/agent_dataset.json)
 - injection eval: `cd ai && python -m scripts.run_injection_eval` (prompt-injection resistance of the agent)
 - ragas eval: `cd ai && python -m scripts.export_for_ragas` then `.venv-ragas\Scripts\python -m eval.ragas_eval` (real Ragas lib in an isolated py3.12 venv — needs `requirements-ragas.txt`; see ai/eval/README.md for why it's separate)
-- ingest corpus: `cd ai && python -m scripts.ingest` (chunk -> embed -> upsert; re-runnable)
+- ingest corpus: `cd ai && python -m scripts.ingest [--docs-version {1.0,0.2}]` (chunk -> embed -> upsert; replaces ONLY the given version — default 1.0 — so re-running one version never touches the other's paid-for embeddings; `--all` is the explicit full-reset escape hatch that truncates and re-embeds everything)
 - mcp server: `cd ai && python -m app.mcp_server` (exposes rag_search/calculator/list_doc_topics over MCP via stdio, for Claude Desktop / MCP clients; reuses app.tools)
 - ai tests: `cd ai && python -m pytest tests -q` (pure unit tests — chunker, RRF fusion, calculator whitelist, citation mapping; no DB/network/keys needed. Install dev deps first: `pip install -r requirements-dev.txt`)
 - lint/format: _(TODO once configured)_

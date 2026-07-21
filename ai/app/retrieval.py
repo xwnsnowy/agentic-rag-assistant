@@ -36,19 +36,33 @@ class Result:
         return f"{m.get('page_title', '?')} — {m.get('heading', '')} <{m.get('source_url', '')}>"
 
 
-def vector_search(query: str, k: int = 5) -> list[Result]:
-    """Top-k by cosine similarity in pgvector."""
+def _version_predicate(version: str | None) -> tuple[str, tuple]:
+    """SQL fragment + params for the docs_version filter.
+
+    None means NO filter (search across every corpus version); a string
+    restricts candidates to that version. Kept in one place so vector and
+    keyword search can't drift apart."""
+    if version is None:
+        return "", ()
+    return "docs_version = %s", (version,)
+
+
+def vector_search(query: str, k: int = 5, *, version: str | None = None) -> list[Result]:
+    """Top-k by cosine similarity in pgvector, optionally within one docs_version."""
     qv = vector_literal(embed(query))
+    pred, pred_params = _version_predicate(version)
+    where = f"WHERE {pred}" if pred else ""
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute(
-            """
+            f"""
             SELECT id, content, metadata,
                    1 - (embedding <=> %s::vector) AS cosine_similarity
             FROM chunks
+            {where}
             ORDER BY embedding <=> %s::vector
             LIMIT %s
             """,
-            (qv, qv, k),
+            (qv, *pred_params, qv, k),
         )
         rows = cur.fetchall()
     return [
@@ -58,20 +72,23 @@ def vector_search(query: str, k: int = 5) -> list[Result]:
     ]
 
 
-def keyword_search(query: str, k: int = 5) -> list[Result]:
+def keyword_search(query: str, k: int = 5, *, version: str | None = None) -> list[Result]:
     """Top-k by Postgres full-text rank. websearch_to_tsquery handles plain user
     queries (phrases, operators) gracefully."""
+    pred, pred_params = _version_predicate(version)
+    extra = f"AND {pred}" if pred else ""
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute(
-            """
+            f"""
             SELECT id, content, metadata,
                    ts_rank(tsv, websearch_to_tsquery('english', %s)) AS rank
             FROM chunks
             WHERE tsv @@ websearch_to_tsquery('english', %s)
+            {extra}
             ORDER BY rank DESC
             LIMIT %s
             """,
-            (query, query, k),
+            (query, query, *pred_params, k),
         )
         rows = cur.fetchall()
     return [
@@ -114,7 +131,13 @@ def rrf_fuse(vec: list[Result], kw: list[Result], *, rrf_k: int = 60) -> list[Re
     return sorted(merged.values(), key=lambda r: r.rrf_score or 0.0, reverse=True)
 
 
-def hybrid_search(query: str, k: int = 5, *, pool: int = 20, rrf_k: int = 60) -> list[Result]:
+def hybrid_search(
+    query: str, k: int = 5, *, pool: int = 20, rrf_k: int = 60, version: str | None = None
+) -> list[Result]:
     """Hybrid retrieval: pull `pool` candidates from each of vector + keyword
     search, fuse the two rankings with RRF (see rrf_fuse), return the top-k."""
-    return rrf_fuse(vector_search(query, pool), keyword_search(query, pool), rrf_k=rrf_k)[:k]
+    return rrf_fuse(
+        vector_search(query, pool, version=version),
+        keyword_search(query, pool, version=version),
+        rrf_k=rrf_k,
+    )[:k]

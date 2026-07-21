@@ -59,14 +59,16 @@ def _install_searches(monkeypatch, seen: dict | None = None):
     (fusion mutates its inputs, so shared fixtures would leak state between
     calls and between tests)."""
 
-    def fake_vector(query, k):
+    def fake_vector(query, k, *, version=None):
         if seen is not None:
             seen.setdefault("vector_queries", []).append(query)
+            seen.setdefault("versions", []).append(version)
         return [_result(cid, vrank=i + 1) for i, cid in enumerate(_VEC_IDS[:k])]
 
-    def fake_keyword(query, k):
+    def fake_keyword(query, k, *, version=None):
         if seen is not None:
             seen.setdefault("keyword_queries", []).append(query)
+            seen.setdefault("versions", []).append(version)
         return [_result(cid, krank=i + 1) for i, cid in enumerate(_KW_IDS[:k])]
 
     monkeypatch.setattr(pipeline_mod, "vector_search", fake_vector)

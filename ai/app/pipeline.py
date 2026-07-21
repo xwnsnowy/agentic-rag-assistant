@@ -23,6 +23,13 @@ class RagConfig:
     rewrite: bool = False  # LLM query-rewrite before retrieval
     k: int = 5
     pool: int = 20  # first-stage candidates pulled before rerank/truncate
+    # Which docs_version to retrieve from; None = the whole (mixed) corpus.
+    # The "1.0" default is LOAD-BEARING: every existing caller (/ask,
+    # rag_search, the eval harness, the cache) keeps retrieving from an
+    # identical candidate set after the v0.2 corpus lands, so the published
+    # Phase 1 numbers survive the corpus doubling by construction. Only a
+    # caller that explicitly opts into None (or "0.2") sees the harder pool.
+    version: str | None = "1.0"
 
 
 # The three configs Phase 1's DoD requires comparing.
@@ -90,14 +97,17 @@ def retrieve_with_trace(query: str, cfg: RagConfig) -> tuple[list[Result], Retri
     first_n = cfg.pool if cfg.rerank else cfg.k
     t0 = time.perf_counter()
     if cfg.method == "vector":
-        pool = vector_search(query, first_n)
+        pool = vector_search(query, first_n, version=cfg.version)
     elif cfg.method == "keyword":
-        pool = keyword_search(query, first_n)
+        pool = keyword_search(query, first_n, version=cfg.version)
     else:
         # Call rrf_fuse directly instead of hybrid_search so the trace keeps
         # the full PRE-truncation fused pool (hybrid_search cuts it to k and
         # the discarded tail would be unrecoverable).
-        pool = rrf_fuse(vector_search(query, cfg.pool), keyword_search(query, cfg.pool))
+        pool = rrf_fuse(
+            vector_search(query, cfg.pool, version=cfg.version),
+            keyword_search(query, cfg.pool, version=cfg.version),
+        )
     retrieve_ms = (time.perf_counter() - t0) * 1000.0
 
     # HAZARD (see tests/test_trace.py): rrf_fuse and rerank() mutate the same
