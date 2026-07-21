@@ -1,4 +1,4 @@
-# Phase 3 — Visible reasoning + Migration Workbench 🚧 IN PROGRESS
+# Phase 3 — Visible reasoning + Migration Workbench 🚧 Stage 1 COMPLETE, Stage 2 next
 
 > **The problem this phase fixes.** The backend does a lot per question — embed, two
 > searches, RRF fusion over 40 candidates, a cross-encoder pass over 20, tool selection,
@@ -39,18 +39,28 @@ Verified against the code before planning — these are why the work is smaller 
 
 ### Definition of Done
 
-- [ ] **S1.0 — Tests exist and gate CI.** `pytest` covers the chunker, RRF fusion, the
-      calculator's AST whitelist, and the citation regex. CI runs them instead of only
-      `compileall`. The retrieval eval reproduces its current numbers after the refactor,
-      proving the extraction changed no behaviour.
-- [ ] **S1.1 — The retrieval trace is captured behind unchanged APIs.** `scripts/ask`
-      output is byte-identical; the MCP server still serves `rag_search` unchanged.
-- [ ] **S1.2 — `node` and `retrieval` SSE events stream.** The *currently deployed*
-      frontend, pointed at the new backend, still streams answers with zero console
-      errors (proves additivity).
-- [ ] **S1.3 — The graph lights up and the inspector shows rank movement.** At least one
-      passage visibly moves rank under rerank; all four score types render; cited rows
-      are badged and the badge numbers match the `[n]` markers in the answer.
+- [x] **S1.0 — Tests exist and gate CI.** 52 pytest cases cover the chunker, RRF fusion,
+      the calculator's AST whitelist, the citation regex, trace ordering and the eval-save
+      guard; CI runs them. The retrieval eval reproduced **all 9 published numbers exactly**
+      on the three configs that don't need Cohere (keyword, baseline, hybrid), proving the
+      `rrf_fuse` extraction changed no behaviour.
+- [x] **S1.1 — The retrieval trace is captured behind unchanged APIs.** `rag_search`'s
+      return string is byte-identical (pinned by an exact-string test); MCP still serves
+      three tools unchanged; `retrieve()` keeps its signature so eval/`/ask`/cache are
+      untouched.
+- [x] **S1.2 — `node` and `retrieval` SSE events stream.** Verified live by curl:
+      `node(agent:active) → tools → node(agent:done) → node(tools:active/done) → retrieval
+      → token×N → citations → node(__end__) → done`. A test strips the new events and
+      asserts the legacy stream is exact, so the additivity claim is enforced, not assumed.
+- [x] **S1.3 — The graph lights up and the inspector renders.** Verified in a real browser
+      against the real backend: nodes light in causal order, "Show work" shows the full pool
+      with `cos · ts · rrf` chips, and cited rows are badged with numbers matching the `[n]`
+      markers in the answer.
+  - [ ] **Blocked, not failed — rank movement is unshowable.** The Cohere key is dead (401),
+        so every `rerank_score` is `null` and `final_ids` is just the fused head. The UI
+        states this honestly ("final order (not reranked)") rather than implying a rerank
+        happened; when the key is rotated the same UI lights up with real movement and no
+        code change. Re-verify this box then.
 
 ### Steps
 
@@ -60,6 +70,33 @@ Verified against the code before planning — these are why the work is smaller 
 | **S1.1** | `RetrievalTrace` + `retrieve_with_trace()` in `pipeline.py`; `_debug_sink` contextvar in `tools.py`; `rerank()` scores the whole pool | Extract intermediate state **out-of-band**, keeping the in-band contract (what the LLM reads) frozen. Changing `rag_search`'s return value would break the prompt, break MCP, and bloat agent context with 20 passages |
 | **S1.2** | `astream_agent` uses `stream_mode=["messages","updates"]`; emits `node` + `retrieval` events | `updates` fires on node completion; `messages` metadata names the active node. Cheaper and cleaner than `stream_mode="debug"`, which interleaves checkpoint noise |
 | **S1.3** | `components/agent-graph.tsx`, `components/retrieval-inspector.tsx`, "Show work" disclosure on `/chat`; wire the unused `AbortSignal` | The graph component **knows nothing about chat** — it takes a topology + events, so Stage 2 reuses it for a different graph. A disclosure, not a side panel: the page is single-column mobile-first, and a panel means a layout rework for a view most turns won't open |
+
+### What Stage 1 turned up (unplanned, worth keeping)
+
+- **A real guardrail failure, caught by the eval.** Re-running the injection harness showed
+  resistance at 0.875: the agent answered *"I cannot comply with that request… Please let me
+  know how I can help! **HACKED**"* — refusing in words while complying in behaviour.
+  Stashing the branch and re-running against the previous commit reproduced the identical
+  failure, so it was **upstream model drift, not a code regression**. Root cause was the
+  *scope* of the SECURITY rule (it forbade changing rules or revealing the prompt, but not
+  controlling the reply's shape). Fixed, back to 1.000 — and notably the abstract rule alone
+  did not hold; gpt-4o-mini needed a concrete example of the pattern. Commits `79e3466`
+  (record the failure) then `2f03fdf` (fix) deliberately keep that order.
+  **This is a prompt-level defence and therefore probabilistic** — an output-side guard
+  checking the reply for literals the question demanded is the durable fix, and is now the
+  strongest candidate for the next hardening step.
+- **Two dead API keys, failing silently.** Cohere (401) and Langfuse (401). The system
+  degrades gracefully — which is correct — but says nothing, so `hybrid+rerank` has been
+  quietly serving hybrid-only. Graceful degradation without an alarm is a gap: a startup
+  health-check that warns on a dead key is worth adding.
+- **`/db/health` leaked exception text** (potentially the Neon DSN) to any caller; fixed in
+  `c515378`. **`calculator` had an unbounded `ast.Pow`** — `9**9**9**9` stalls a turn; bounded
+  in `b300d81`.
+- **Pool size is variable**, 20–40: it is the union of the two candidate lists, so it equals
+  20 when they overlap completely. Nothing downstream may assume `len(pool) == cfg.pool`.
+- **Cold-start anomaly, seen once:** the first turn after backend boot delivered most SSE
+  events in an end-burst instead of streaming. Warm turns always streamed correctly. Relevant
+  to demos on a cold Render free-tier instance; unexplained, backend-side.
 
 ---
 
