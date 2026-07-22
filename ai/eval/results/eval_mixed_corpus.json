@@ -1,0 +1,69 @@
+{
+  "k": 5,
+  "embedding": "real",
+  "judged": false,
+  "n_answerable": 44,
+  "n_negative": 6,
+  "corpus": {
+    "0.2": 154,
+    "1.0": 244
+  },
+  "reports": [
+    {
+      "name": "keyword",
+      "hit": 0.38636363636363635,
+      "mrr": 0.3303030303030303,
+      "precision": 0.2981060606060606,
+      "latency_ms": 460.9877431819934,
+      "version": "1.0",
+      "faithfulness": null,
+      "relevancy": null,
+      "context_precision": null,
+      "context_recall": null,
+      "abstention": null,
+      "v02_in_topk": 0.0
+    },
+    {
+      "name": "baseline",
+      "hit": 0.9772727272727273,
+      "mrr": 0.9015151515151515,
+      "precision": 0.6272727272727273,
+      "latency_ms": 1858.5874772726459,
+      "version": "1.0",
+      "faithfulness": null,
+      "relevancy": null,
+      "context_precision": null,
+      "context_recall": null,
+      "abstention": null,
+      "v02_in_topk": 0.0
+    },
+    {
+      "name": "hybrid",
+      "hit": 0.9772727272727273,
+      "mrr": 0.9128787878787878,
+      "precision": 0.6318181818181818,
+      "latency_ms": 2226.429797727426,
+      "version": "1.0",
+      "faithfulness": null,
+      "relevancy": null,
+      "context_precision": null,
+      "context_recall": null,
+      "abstention": null,
+      "v02_in_topk": 0.0
+    },
+    {
+      "name": "hybrid (mixed corpus)",
+      "hit": 0.9090909090909091,
+      "mrr": 0.6465909090909091,
+      "precision": 0.34545454545454546,
+      "latency_ms": 2223.703406818045,
+      "version": null,
+      "faithfulness": null,
+      "relevancy": null,
+      "context_precision": null,
+      "context_recall": null,
+      "abstention": null,
+      "v02_in_topk": 2.6363636363636362
+    }
+  ]
+}
