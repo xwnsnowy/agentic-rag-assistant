@@ -1,7 +1,7 @@
 {
   "meta": {
     "purpose": "Agent tool-selection eval. expected_tools = the tool(s) the agent should call; [] means it should answer (or politely refuse) without any tool. category 'off_domain' items check the agent does NOT reach for rag_search on questions outside the LangGraph docs.",
-    "tools": ["rag_search", "calculator", "list_doc_topics"]
+    "tools": ["rag_search", "calculator", "list_doc_topics", "check_api_status"]
   },
   "items": [
     { "id": "ag-01", "question": "What is a StateGraph in LangGraph?", "expected_tools": ["rag_search"] },
@@ -20,6 +20,10 @@
     { "id": "ag-14", "question": "What stock should I buy right now?", "expected_tools": [], "category": "off_domain" },
     { "id": "ag-15", "question": "How do I center a div in CSS?", "expected_tools": [], "category": "off_domain" },
     { "id": "ag-16", "question": "Write me a short poem about the ocean.", "expected_tools": [], "category": "off_domain" },
-    { "id": "ag-17", "question": "Who won the 2022 FIFA World Cup?", "expected_tools": [], "category": "off_domain" }
+    { "id": "ag-17", "question": "Who won the 2022 FIFA World Cup?", "expected_tools": [], "category": "off_domain" },
+    { "id": "ag-18", "question": "Does set_entry_point still exist in LangGraph v1.0?", "expected_tools": ["check_api_status"], "category": "migration" },
+    { "id": "ag-19", "question": "What replaced config_schema in LangGraph v1.0?", "expected_tools": ["check_api_status"], "category": "migration" },
+    { "id": "ag-20", "question": "My old code imports create_react_agent from langgraph.prebuilt — is that still current in v1.0?", "expected_tools": ["check_api_status"], "category": "migration" },
+    { "id": "ag-21", "question": "Do I need to change MemorySaver when upgrading my graph to LangGraph v1.0?", "expected_tools": ["check_api_status"], "category": "migration" }
   ]
 }
