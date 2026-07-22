@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from app.config import get_settings
+from app.db import get_connection
 from app.generation import generate
 from app.pipeline import CONFIGS, RagConfig, retrieve
 from eval import judge as judge_mod
@@ -26,7 +27,22 @@ RESULTS_DIR = Path(__file__).resolve().parents[1] / "eval" / "results"
 # Add a pure-keyword config so there is at least one fully-meaningful column
 # before a real embedding key lands.
 KEYWORD = RagConfig(name="keyword", method="keyword", rerank=False)
-DEFAULT_CONFIGS = [KEYWORD, *CONFIGS]
+# S2.1: the "harder condition" — retrieve over BOTH corpus versions
+# (version=None) with everything else identical to the filtered `hybrid` row,
+# so the delta between the two rows isolates exactly one variable: the filter.
+# Named plain `hybrid`, NOT `hybrid+rerank`: with the Cohere key dead (401)
+# rerank degrades silently to hybrid order, and the row must be named for what
+# actually runs.
+MIXED = RagConfig(name="hybrid (mixed corpus)", method="hybrid", rerank=False, version=None)
+DEFAULT_CONFIGS = [KEYWORD, *CONFIGS, MIXED]
+
+
+def corpus_counts() -> dict[str, int]:
+    """Chunk count per docs_version, queried live — provenance for the summary
+    JSON so a result file records exactly which corpus produced it."""
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT docs_version, count(*) FROM chunks GROUP BY 1 ORDER BY 1")
+        return {v: int(c) for v, c in cur.fetchall()}
 
 
 @dataclass
@@ -36,11 +52,18 @@ class ConfigReport:
     mrr: float
     precision: float
     latency_ms: float
+    # Which docs_version the config retrieved from (None = unfiltered/mixed).
+    # Recorded so a result row carries its own provenance.
+    version: str | None = None
     faithfulness: float | None = None
     relevancy: float | None = None
     context_precision: float | None = None
     context_recall: float | None = None
     abstention: float | None = None  # fraction of negatives correctly handled
+    # Mean count of v0.2 chunks among the top-k. Diagnostic for the mixed-corpus
+    # condition (how much does the harder pool actually intrude?); doubles as a
+    # sanity check for filtered configs, where it must be 0.0.
+    v02_in_topk: float | None = None
 
 
 def _mean(xs: list[float]) -> float:
@@ -58,7 +81,7 @@ def run_eval(configs=DEFAULT_CONFIGS, k: int = 5, judge: bool = False) -> dict:
 
     reports: list[ConfigReport] = []
     for cfg in configs:
-        hits, rrs, precs, lats = [], [], [], []
+        hits, rrs, precs, lats, v02s = [], [], [], [], []
         faiths, relevs, ctxps, ctxrs, abstains = [], [], [], [], []
 
         for item in answerable:
@@ -70,6 +93,9 @@ def run_eval(configs=DEFAULT_CONFIGS, k: int = 5, judge: bool = False) -> dict:
                 hits.append(hit_at_k(results, exp))
                 rrs.append(reciprocal_rank(results, exp))
                 precs.append(precision_at_k(results, exp))
+                v02s.append(
+                    sum(1 for r in results if (r.metadata or {}).get("docs_version") == "0.2")
+                )
 
                 if can_judge:
                     ans = generate(item["question"], results)
@@ -99,6 +125,7 @@ def run_eval(configs=DEFAULT_CONFIGS, k: int = 5, judge: bool = False) -> dict:
         reports.append(
             ConfigReport(
                 name=cfg.name,
+                version=cfg.version,
                 hit=_mean(hits),
                 mrr=_mean(rrs),
                 precision=_mean(precs),
@@ -108,6 +135,7 @@ def run_eval(configs=DEFAULT_CONFIGS, k: int = 5, judge: bool = False) -> dict:
                 context_precision=_mean(ctxps) if ctxps else None,
                 context_recall=_mean(ctxrs) if ctxrs else None,
                 abstention=_mean(abstains) if abstains else None,
+                v02_in_topk=_mean(v02s) if v02s else None,
             )
         )
 
@@ -117,6 +145,8 @@ def run_eval(configs=DEFAULT_CONFIGS, k: int = 5, judge: bool = False) -> dict:
         "judged": can_judge,
         "n_answerable": len(answerable),
         "n_negative": len(negatives),
+        # Provenance: which corpus produced these numbers (queried, not assumed).
+        "corpus": corpus_counts(),
         "reports": [r.__dict__ for r in reports],
     }
 
@@ -128,6 +158,11 @@ def render_markdown(summary: dict) -> str:
         f"- Embedding vectors: **{summary['embedding']}**"
         + ("" if summary["embedding"] == "real" else "  ← vector/hybrid columns are placeholders until a real key lands"),
         f"- LLM-judge: **{'on' if summary['judged'] else 'off'}**  ·  answerable items: {summary['n_answerable']}  ·  negatives: {summary['n_negative']}",
+    ]
+    if summary.get("corpus"):
+        corpus = "  ·  ".join(f"v{v}: {n} chunks" for v, n in summary["corpus"].items())
+        lines.append(f"- Corpus in DB: {corpus}")
+    lines += [
         "",
         "| Config | hit@k | MRR | P@k | latency (ms) | faithfulness | relevancy | ctx-prec | ctx-recall | neg-handling |",
         "|---|---|---|---|---|---|---|---|---|---|",

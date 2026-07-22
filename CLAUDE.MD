@@ -128,6 +128,7 @@ is the first place to look for how to run anything.
 - fetch corpus: `cd ai && python -m scripts.fetch_corpus` (LangGraph v1.0 docs -> data/raw/ + manifest.json; pinned tag 1.0.10)
 - fetch corpus v0.2: `cd ai && python -m scripts.fetch_corpus --docs-version 0.2` (10 concepts pages from the GitHub repo at pinned tag 0.2.76 -> data/raw-0.2/ + manifest-0.2.json)
 - eval: `cd ai && python -m scripts.run_eval --judge` (compares keyword/baseline/hybrid/hybrid+rerank; `--judge` adds faithfulness/relevancy via LLM, traced to Langfuse)
+- mixed-corpus eval: `cd ai && python -m scripts.run_mixed_eval` (S2.1: filtered v1.0 configs vs unfiltered mixed-corpus hybrid, retrieval-only; writes eval/results/eval_mixed_corpus.{md,json})
 - ask (RAG): `cd ai && python -m scripts.ask "<question>" --config hybrid+rerank`
 - agent ask: `cd ai && python -m scripts.agent_ask "<question>"` (LangGraph agent picks tools: rag_search/calculator/list_doc_topics)
 - agent eval: `cd ai && python -m scripts.run_agent_eval` (tool-selection accuracy over eval/agent_dataset.json)
