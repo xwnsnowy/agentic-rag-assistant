@@ -1,7 +1,7 @@
 """MCP server (Model Context Protocol) exposing the Phase 2 tools.
 
 Why this exists: the agent in `app.agent` already calls `rag_search` / `calculator`
-/ `list_doc_topics` internally. MCP lets the *same* tools be consumed by any MCP
+/ `list_doc_topics` / `check_api_status` internally. MCP lets the *same* tools be consumed by any MCP
 client (Claude Desktop, IDEs, other agents) over a standard protocol — one tool
 implementation, two front doors (internal LangGraph agent + external MCP).
 
@@ -26,6 +26,7 @@ from mcp.server.fastmcp import FastMCP
 
 # Importing app.tools also triggers app.__init__ (truststore TLS injection).
 from app.tools import calculator as _calculator
+from app.tools import check_api_status as _check_api_status
 from app.tools import list_doc_topics as _list_doc_topics
 from app.tools import rag_search as _rag_search
 
@@ -33,13 +34,15 @@ mcp = FastMCP("langgraph-docs-rag")
 
 
 @mcp.tool()
-def rag_search(query: str) -> str:
-    """Search the LangGraph v1.0 documentation for an answer.
+def rag_search(query: str, docs_version: str = "1.0") -> str:
+    """Search the LangGraph documentation for an answer.
 
     Returns numbered passages with their source URLs so the answer can cite them
-    as [n]. Use for any LangGraph concept / API / how-to question.
+    as [n]. Use for any LangGraph concept / API / how-to question. docs_version
+    picks the corpus: "1.0" (default, current docs) or "0.2" (legacy docs, only
+    for understanding what old v0.x code meant).
     """
-    return _rag_search.invoke({"query": query})
+    return _rag_search.invoke({"query": query, "docs_version": docs_version})
 
 
 @mcp.tool()
@@ -58,6 +61,17 @@ def list_doc_topics() -> str:
     Use for meta questions like "what topics can you answer about?".
     """
     return _list_doc_topics.invoke({})
+
+
+@mcp.tool()
+def check_api_status(symbol: str) -> str:
+    """Check whether a LangGraph API symbol still exists in v1.0 and what replaced it.
+
+    Use for migration/deprecation questions ("does set_entry_point still work?").
+    Returns a corpus-verified verdict (deprecated / renamed / moved / unchanged)
+    plus per-version mention counts from the pinned v0.2 and v1.0 corpora.
+    """
+    return _check_api_status.invoke({"symbol": symbol})
 
 
 def main() -> None:
