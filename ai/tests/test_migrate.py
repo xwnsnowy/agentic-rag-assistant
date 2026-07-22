@@ -135,6 +135,25 @@ def test_flag_caveat_mentions_taught_replacement_when_the_map_has_one():
     assert "interrupt()" in caveat  # the map's replacement, offered as guidance
 
 
+# --- research query construction --------------------------------------------
+
+
+def test_research_query_spells_moved_replacements_as_imports():
+    # A moved symbol has zero v1.0 mentions, so querying by the old name is
+    # noise; the query must be how the v1.0 docs spell the replacement.
+    f = {"symbol": "create_react_agent", "status": "moved",
+         "replacement": "langchain.agents.create_agent"}
+    assert migrate_mod._research_query(f) == "from langchain.agents import create_agent"
+
+
+def test_research_query_keeps_symbol_for_deprecated_and_renamed():
+    f = {"symbol": "set_entry_point", "status": "deprecated",
+         "replacement": "add_edge(START, node)"}
+    assert migrate_mod._research_query(f) == "set_entry_point add_edge(START, node)"
+    f = {"symbol": "config_schema", "status": "renamed", "replacement": "context_schema"}
+    assert migrate_mod._research_query(f) == "config_schema context_schema"
+
+
 # --- verify_rewrite ----------------------------------------------------------
 
 

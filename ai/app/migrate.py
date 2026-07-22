@@ -324,8 +324,7 @@ def _research_node(state: MigrateState) -> dict:
         if f["action"] == "modernize":
             # Ground the REWRITE: the v1.0 corpus is where the replacement is
             # taught, so that is what the change will cite.
-            query = f"{f['symbol']} {f['replacement']}" if f["replacement"] else f["symbol"]
-            passages = _rag_search(query, "1.0")
+            passages = _rag_search(_research_query(f), "1.0")
         else:
             # Flag findings need the legacy semantics established, and those
             # live where the symbol is actually taught (its doc_version corpus).
@@ -342,6 +341,24 @@ def _research_node(state: MigrateState) -> dict:
             }
         )
     return {"evidence": evidence}
+
+
+def _research_query(finding: dict) -> str:
+    """Build the v1.0 retrieval query for a modernize finding.
+
+    For `moved` symbols the old name has ZERO v1.0 mentions by definition of
+    the status, so including it only adds vector noise that drags retrieval
+    toward generically agent-ish pages (measured: mig-006/007 cited sql-agent
+    instead of the curated evidence page). Instead ask for the replacement the
+    way the v1.0 docs actually spell it — as an import statement derived from
+    the map's dotted path. For deprecated/renamed the old name still appears
+    in (or near) the v1.0 teaching passage, so symbol + replacement works.
+    """
+    repl = finding.get("replacement") or ""
+    if finding["status"] == "moved" and re.fullmatch(r"[\w.]+\.\w+", repl):
+        module, _, name = repl.rpartition(".")
+        return f"from {module} import {name}"
+    return f"{finding['symbol']} {repl}".strip()
 
 
 def _route_after_research(state: MigrateState) -> str:
