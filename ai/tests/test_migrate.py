@@ -1,18 +1,25 @@
-"""Pure tests for the migration workbench core (app/migrate.py, S2.4).
+"""Pure tests for the migration workbench (app/migrate.py, S2.4).
 
 No LLM, no DB, no network: detect and verify are the deterministic halves of
 the pipeline and must be fully trustable in CI — they are what closed the
-baseline's blindness gap, so they get the direct coverage.
+baseline's blindness gap, so they get the direct coverage. The graph-level
+tests monkeypatch the three seams (_chat, _rag_search, _check_api_status) and
+run the real compiled LangGraph.
 """
 
 import ast
+import asyncio
+import json
 
+import app.migrate as migrate_mod
+import app.tools as tools_mod
 from app.migrate import (
     MAX_CODE_CHARS,
     collect_symbols,
     detect_findings,
     flag_caveat,
     make_diff,
+    run_migrate,
     validate_input,
     verify_rewrite,
 )
@@ -206,3 +213,210 @@ def test_diff_is_well_formed_unified_diff():
     assert lines[2].startswith("@@")
     assert '-builder.set_entry_point("a")' in lines
     assert '+builder.add_edge(START, "a")' in lines
+
+
+# --- the full graph (LLM + retrieval monkeypatched) --------------------------
+
+LEGACY = (
+    "from langgraph.graph import StateGraph\n"
+    "\n"
+    "builder = StateGraph(State)\n"
+    'builder.add_node("double", double)\n'
+    'builder.set_entry_point("double")\n'
+    "graph = builder.compile()\n"
+)
+GOOD = (
+    "from langgraph.graph import StateGraph, START\n"
+    "\n"
+    "builder = StateGraph(State)\n"
+    'builder.add_node("double", double)\n'
+    'builder.add_edge(START, "double")\n'
+    "graph = builder.compile()\n"
+)
+BAD = LEGACY  # "rewrite" that left the deprecated call in place
+
+
+def _good_reply() -> str:
+    return json.dumps(
+        {
+            "code": GOOD,
+            "changes": [
+                {"description": "entry point -> explicit START edge", "citations": [1]}
+            ],
+        }
+    )
+
+
+def _install_research_stubs(monkeypatch, slug="graph-api"):
+    monkeypatch.setattr(
+        migrate_mod, "_check_api_status", lambda symbol: f"`{symbol}`: verdict"
+    )
+
+    def fake_rag(query, docs_version):
+        sink = tools_mod._citation_sink.get()
+        debug = tools_mod._debug_sink.get()
+        n = (len(sink) if sink is not None else 0) + 1
+        if sink is not None:
+            sink.append(
+                {
+                    "n": n,
+                    "chunk_id": 100 + n,
+                    "page_title": "Graph API",
+                    "heading": "Entry point",
+                    "source_url": "https://example.com/graph-api",
+                    "slug": slug,
+                    "docs_version": docs_version,
+                }
+            )
+        if debug is not None:
+            debug.append(
+                {
+                    "tool_call_query": query,
+                    "citation_ns": [n],
+                    "pool": [{"chunk_id": 100 + n}],
+                    "final_ids": [100 + n],
+                    "timings_ms": {"retrieve": 1.0, "rerank": None},
+                }
+            )
+        return f"[{n}] Graph API — Entry point\nURL: https://example.com/graph-api\n..."
+
+    monkeypatch.setattr(migrate_mod, "_rag_search", fake_rag)
+
+
+def _install_chat(monkeypatch, replies: list[str]) -> list:
+    calls: list = []
+
+    def fake_chat(messages, **kwargs):
+        calls.append(messages)
+        return replies[min(len(calls) - 1, len(replies) - 1)]
+
+    monkeypatch.setattr(migrate_mod, "_chat", fake_chat)
+    return calls
+
+
+def test_no_findings_returns_input_byte_identical_without_llm(monkeypatch):
+    calls = _install_chat(monkeypatch, ["SHOULD NEVER BE CALLED"])
+    # Deliberately gnarly formatting: trailing spaces, blank runs, no final \n.
+    clean = "x = 1   \n\n\ny = x + 1"
+    res = run_migrate(clean)
+    assert res.rewritten == clean  # byte-identical, not normalize-equal
+    assert res.error is None
+    assert res.diff == ""
+    assert res.changes == [] and res.caveats == []
+    assert calls == []  # clean code never round-trips through an LLM
+
+
+def test_guardrails_reject_oversized_and_unparseable_input(monkeypatch):
+    _install_chat(monkeypatch, ["SHOULD NEVER BE CALLED"])
+    res = run_migrate("def broken(:\n")
+    assert res.error is not None and "parse" in res.error.lower()
+    assert res.rewritten == "def broken(:\n"  # echoed back, never rewritten
+
+    res = run_migrate("x = 1\n" * 2000)
+    assert res.error is not None and str(MAX_CODE_CHARS) in res.error
+
+
+def test_flag_only_input_unchanged_with_symbol_naming_caveat(monkeypatch):
+    _install_research_stubs(monkeypatch)
+    calls = _install_chat(monkeypatch, ["SHOULD NEVER BE CALLED"])
+    code = 'graph.update_state(config, {"foo": 2})\n'
+    res = run_migrate(code)
+    assert res.rewritten == code  # byte-identical
+    assert res.changes == []
+    assert any("update_state" in c for c in res.caveats)
+    assert calls == []  # flag path is deterministic — no LLM
+    assert res.verified is True
+    # The 0.2 corpus (where update_state is taught) was consulted as evidence.
+    assert len(res.retrieval_traces) == 1
+
+
+def test_modernize_happy_path_rewrites_with_slug_mapped_citations(monkeypatch):
+    _install_research_stubs(monkeypatch)
+    calls = _install_chat(monkeypatch, [_good_reply()])
+    res = run_migrate(LEGACY)
+    assert len(calls) == 1
+    assert res.rewritten == GOOD
+    assert res.verified is True and res.attempts == 1
+    assert res.changes[0]["citations"] == [1]
+    assert res.changes[0]["citation_slugs"] == ["graph-api"]
+    assert [c["n"] for c in res.citations] == [1]
+    assert res.diff.startswith("--- legacy.py")
+
+
+def test_verify_failure_triggers_exactly_one_retry_then_succeeds(monkeypatch):
+    _install_research_stubs(monkeypatch)
+    bad_reply = json.dumps({"code": BAD, "changes": []})
+    calls = _install_chat(monkeypatch, [bad_reply, _good_reply()])
+    res = run_migrate(LEGACY)
+    assert len(calls) == 2  # initial + exactly one retry
+    assert res.rewritten == GOOD
+    assert res.verified is True and res.attempts == 2
+    # The retry prompt carried the verify feedback naming the survivor.
+    retry_user = calls[1][1]["content"]
+    assert "FAILED VERIFICATION" in retry_user
+    assert "set_entry_point" in retry_user
+
+
+def test_verify_failure_twice_gives_up_gracefully(monkeypatch):
+    _install_research_stubs(monkeypatch)
+    bad_reply = json.dumps(
+        {"code": BAD, "changes": [{"description": "tried", "citations": [1]}]}
+    )
+    calls = _install_chat(monkeypatch, [bad_reply, bad_reply])
+    res = run_migrate(LEGACY)
+    assert len(calls) == 2  # bounded: never a third attempt
+    assert res.verified is False
+    assert res.rewritten == BAD  # parseable best-effort returned, loudly
+    assert any("Verification failed" in c for c in res.caveats)
+
+
+def test_unparseable_rewrites_fall_back_to_the_original(monkeypatch):
+    _install_research_stubs(monkeypatch)
+    garbage = json.dumps({"code": "def broken(:\n", "changes": []})
+    _install_chat(monkeypatch, [garbage, garbage])
+    res = run_migrate(LEGACY)
+    assert res.verified is False
+    assert res.rewritten == LEGACY  # original, byte-identical
+    assert res.changes == []  # no changes claimed for code we didn't return
+    assert any("original code is returned unchanged" in c for c in res.caveats)
+
+
+def test_stream_event_sequence_for_a_modernize_run(monkeypatch):
+    _install_research_stubs(monkeypatch)
+    _install_chat(monkeypatch, [_good_reply()])
+
+    async def _collect():
+        return [ev async for ev in migrate_mod.astream_migrate(LEGACY)]
+
+    events = asyncio.run(_collect())
+    kinds = [
+        (e["type"], e["v"]["name"]) if e["type"] == "node" else e["type"]
+        for e in events
+    ]
+    assert kinds == [
+        ("node", "detect"), ("node", "detect"),
+        ("node", "research"), "retrieval", ("node", "research"),
+        ("node", "rewrite"), ("node", "rewrite"),
+        ("node", "verify"), ("node", "verify"),
+        "token", "citations", "result", ("node", "__end__"), "done",
+    ]
+    statuses = [e["v"]["status"] for e in events if e["type"] == "node"]
+    assert statuses == ["active", "done"] * 4 + ["done"]
+    result = next(e for e in events if e["type"] == "result")
+    assert set(result["v"]) == {"original", "rewritten", "changes", "caveats", "diff"}
+    assert result["v"]["rewritten"] == GOOD
+
+
+def test_stream_clean_input_skips_research_rewrite_verify(monkeypatch):
+    calls = _install_chat(monkeypatch, ["SHOULD NEVER BE CALLED"])
+
+    async def _collect():
+        return [ev async for ev in migrate_mod.astream_migrate("x = 1\n")]
+
+    events = asyncio.run(_collect())
+    node_names = {e["v"]["name"] for e in events if e["type"] == "node"}
+    assert node_names == {"detect", "__end__"}
+    assert calls == []
+    result = next(e for e in events if e["type"] == "result")
+    assert result["v"]["rewritten"] == "x = 1\n" and result["v"]["diff"] == ""
+    assert events[-1] == {"type": "done"}

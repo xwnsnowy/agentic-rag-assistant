@@ -112,6 +112,11 @@ def rag_search(query: str, docs_version: str = "1.0") -> str:
                     "page_title": m.get("page_title"),
                     "heading": m.get("heading"),
                     "source_url": m.get("source_url"),
+                    # Additive (S2.4): the migration workbench maps change
+                    # citations [n] -> page slugs (chunk ids rot on re-ingest,
+                    # slugs do not). Chat consumers ignore the extra keys.
+                    "slug": m.get("slug"),
+                    "docs_version": m.get("docs_version"),
                 }
             )
         blocks.append(
