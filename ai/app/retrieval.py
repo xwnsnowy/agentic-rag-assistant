@@ -59,7 +59,7 @@ def vector_search(query: str, k: int = 5, *, version: str | None = None) -> list
                    1 - (embedding <=> %s::vector) AS cosine_similarity
             FROM chunks
             {where}
-            ORDER BY embedding <=> %s::vector
+            ORDER BY embedding <=> %s::vector, id
             LIMIT %s
             """,
             (qv, *pred_params, qv, k),
@@ -74,7 +74,16 @@ def vector_search(query: str, k: int = 5, *, version: str | None = None) -> list
 
 def keyword_search(query: str, k: int = 5, *, version: str | None = None) -> list[Result]:
     """Top-k by Postgres full-text rank. websearch_to_tsquery handles plain user
-    queries (phrases, operators) gracefully."""
+    queries (phrases, operators) gracefully.
+
+    The `, id` in ORDER BY is a deterministic tiebreaker, not decoration.
+    ts_rank produces genuine ties — including float-noise scores around 2e-16
+    shared by many rows — and SQL leaves the order of tied rows unspecified, so
+    Postgres returns whatever physical order it happens to have. A full-table
+    UPDATE (migration 003) rewrote row order and silently permuted one query's
+    top-20, moving MRR by 0.017 with no code change. Retrieval that is not
+    reproducible cannot be measured, so ties break by id.
+    """
     pred, pred_params = _version_predicate(version)
     extra = f"AND {pred}" if pred else ""
     with get_connection() as conn, conn.cursor() as cur:
@@ -85,7 +94,7 @@ def keyword_search(query: str, k: int = 5, *, version: str | None = None) -> lis
             FROM chunks
             WHERE tsv @@ websearch_to_tsquery('english', %s)
             {extra}
-            ORDER BY rank DESC
+            ORDER BY rank DESC, id
             LIMIT %s
             """,
             (query, query, *pred_params, k),
