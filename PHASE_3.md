@@ -116,14 +116,31 @@ to *"why does this need to exist when ChatGPT exists?"*
 - [ ] **S2.0 — Both doc versions coexist.** `SELECT docs_version, count(*) FROM chunks`
       shows v1.0 and v0.2; re-ingesting one version leaves the other's embeddings intact;
       the v1.0 retrieval numbers reproduce within noise.
-- [ ] **S2.1 — The corpus got harder, measured.** The results table gains a labelled
-      mixed-corpus row. Previously published numbers keep their meaning.
-  - ⚠️ **Relevance identity must become `(docs_version, slug)` first.** Two slugs exist in
-        both corpora — `persistence` and `streaming`. `eval/metrics.py` judges relevance by
-        slug alone, so in the unfiltered mixed run a v0.2 `persistence` chunk would score as
-        a correct hit for a v1.0 `persistence` question. That inflates the mixed-corpus row
-        in the *flattering* direction and hides the very degradation S2.1 exists to measure.
-        Fix the metric before trusting any mixed-corpus number.
+- [x] **S2.1 — The corpus got harder, measured.** Relevance identity is now
+      `(docs_version, slug)` — needed because `persistence` and `streaming` exist as slugs
+      in *both* corpora, so slug-only matching would have counted a v0.2 chunk as a correct
+      hit and inflated the mixed row in the flattering direction. Published in
+      `eval/results/eval_mixed_corpus.md`, with `eval_real.md` left intact.
+
+      **Result — the degradation is large and explained:**
+
+      | hybrid | hit@5 | MRR | P@5 | v0.2 chunks in top-5 |
+      |---|---|---|---|---|
+      | filtered `1.0` | 0.977 | 0.913 | 0.632 | 0.00 |
+      | unfiltered mixed | 0.909 | 0.647 | 0.345 | **2.64 / 5** |
+
+      The deprecated corpus does not sit inertly in the index: its prose on
+      persistence/streaming/graphs is near-identical to v1.0's, so it wins over half the
+      result list, halving MRR and precision. This is exactly the "confidently retrieves
+      stale docs" failure the workbench exists to fix — now a measurement, not a claim.
+
+- [x] **Bonus finding — retrieval was not deterministic.** Enforcing "the metric fix must
+      not move the published configs" caught a real bug: `ORDER BY rank DESC` leaves tied
+      rows unordered, one golden item's relevant chunk sits in a ~2.2e-16 `ts_rank` tie, and
+      migration 003's full-table UPDATE permuted it — moving hybrid MRR 0.896 → 0.913 with
+      no code change. Ties now break by `id`; verified stable across three runs. The old
+      figure was one valid ordering, not an error — but an unreproducible measurement is not
+      a measurement.
 - [ ] **S2.2 — `check_api_status` answers with evidence** — verdict from a curated map,
       corroborated by per-version occurrence counts from the corpus itself.
 - [ ] **S2.3 — A migration eval exists, with a raw-LLM baseline committed first.**
