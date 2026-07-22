@@ -130,18 +130,22 @@ is the first place to look for how to run anything.
 - eval: `cd ai && python -m scripts.run_eval --judge` (compares keyword/baseline/hybrid/hybrid+rerank; `--judge` adds faithfulness/relevancy via LLM, traced to Langfuse)
 - mixed-corpus eval: `cd ai && python -m scripts.run_mixed_eval` (S2.1: filtered v1.0 configs vs unfiltered mixed-corpus hybrid, retrieval-only; writes eval/results/eval_mixed_corpus.{md,json})
 - ask (RAG): `cd ai && python -m scripts.ask "<question>" --config hybrid+rerank`
-- agent ask: `cd ai && python -m scripts.agent_ask "<question>"` (LangGraph agent picks tools: rag_search/calculator/list_doc_topics)
+- agent ask: `cd ai && python -m scripts.agent_ask "<question>"` (LangGraph agent picks tools: rag_search/calculator/list_doc_topics/check_api_status)
 - agent eval: `cd ai && python -m scripts.run_agent_eval` (tool-selection accuracy over eval/agent_dataset.json)
 - injection eval: `cd ai && python -m scripts.run_injection_eval` (prompt-injection resistance of the agent)
 - ragas eval: `cd ai && python -m scripts.export_for_ragas` then `.venv-ragas\Scripts\python -m eval.ragas_eval` (real Ragas lib in an isolated py3.12 venv — needs `requirements-ragas.txt`; see ai/eval/README.md for why it's separate)
 - ingest corpus: `cd ai && python -m scripts.ingest [--docs-version {1.0,0.2}]` (chunk -> embed -> upsert; replaces ONLY the given version — default 1.0 — so re-running one version never touches the other's paid-for embeddings; `--all` is the explicit full-reset escape hatch that truncates and re-embeds everything)
-- mcp server: `cd ai && python -m app.mcp_server` (exposes rag_search/calculator/list_doc_topics over MCP via stdio, for Claude Desktop / MCP clients; reuses app.tools)
-- ai tests: `cd ai && python -m pytest tests -q` (pure unit tests — chunker, RRF fusion, calculator whitelist, citation mapping; no DB/network/keys needed. Install dev deps first: `pip install -r requirements-dev.txt`)
+- mcp server: `cd ai && python -m app.mcp_server` (exposes rag_search/calculator/list_doc_topics/check_api_status over MCP via stdio, for Claude Desktop / MCP clients; reuses app.tools)
+- ai tests: `cd ai && python -m pytest tests -q` (pure unit tests — chunker, RRF fusion, calculator whitelist, citation mapping, deprecations-map schema, check_api_status rendering; no DB/network/keys needed. Install dev deps first: `pip install -r requirements-dev.txt`)
 - lint/format: _(TODO once configured)_
 
 ## Reference files
 
 - `Agentic_RAG_Build_Plan.md` — full phased plan with Definition-of-Done per phase.
+- `ai/data/deprecations.json` — corpus-verified v0.2→v1.0 API-status map behind `check_api_status`
+  (and the future migration workbench). Every entry was verified by grepping `ai/data/raw/` and
+  `ai/data/raw-0.2/`, never written from memory; statuses include `unevidenced` when the corpora
+  cannot prove a removal. Keys on symbols + doc slugs, never chunk ids (reassigned on re-ingest).
 - `golden_dataset_langgraph.json` — eval golden dataset (starter, expand to 30-50 items).
   Keep ~40% easy / 40% medium / 20% hard, include `negative` traps (questions the docs can't
   answer) to test that the system says "not found" instead of hallucinating.
