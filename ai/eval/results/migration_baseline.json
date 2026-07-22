@@ -1,0 +1,339 @@
+{
+  "label": "raw-LLM baseline (gpt-4o-mini, no retrieval, no tools)",
+  "n": 20,
+  "by_kind": {
+    "modernize": 10,
+    "flag": 6,
+    "clean": 4
+  },
+  "metrics": {
+    "parses": 1.0,
+    "deprecated_removed": 0.0,
+    "idiom_present": 0.0,
+    "citation_coverage": 0.0,
+    "clean_passthrough": 1.0,
+    "flagged_not_rewritten": 0.0
+  },
+  "rows": [
+    {
+      "id": "mig-001",
+      "kind": "modernize",
+      "scores": {
+        "parses": true,
+        "deprecated_removed": false,
+        "idiom_present": false,
+        "citation_coverage": 0.0
+      },
+      "n_changes": 0,
+      "n_caveats": 0,
+      "latency_ms": 8028,
+      "error": null,
+      "code": "from typing_extensions import TypedDict\nfrom langgraph.graph import StateGraph\n\n\nclass State(TypedDict):\n    x: int\n    result: int\n\n\ndef double(state: State) -> dict:\n    return {\"result\": state[\"x\"] * 2}\n\n\nbuilder = StateGraph(State)\nbuilder.add_node(\"double\", double)\nbuilder.set_entry_point(\"double\")\ngraph = builder.compile()",
+      "changes": [],
+      "caveats": []
+    },
+    {
+      "id": "mig-002",
+      "kind": "modernize",
+      "scores": {
+        "parses": true,
+        "deprecated_removed": false,
+        "idiom_present": false,
+        "citation_coverage": 0.0
+      },
+      "n_changes": 0,
+      "n_caveats": 0,
+      "latency_ms": 1735,
+      "error": null,
+      "code": "from typing_extensions import TypedDict\nfrom langgraph.graph import StateGraph, START\n\n\nclass State(TypedDict):\n    x: int\n    result: int\n\n\ndef double(state: State) -> dict:\n    return {\"result\": state[\"x\"] * 2}\n\n\nbuilder = StateGraph(State)\nbuilder.add_node(\"double\", double)\nbuilder.add_edge(START, \"double\")\nbuilder.set_finish_point(\"double\")\ngraph = builder.compile()",
+      "changes": [],
+      "caveats": []
+    },
+    {
+      "id": "mig-003",
+      "kind": "modernize",
+      "scores": {
+        "parses": true,
+        "deprecated_removed": false,
+        "idiom_present": false,
+        "citation_coverage": 0.0
+      },
+      "n_changes": 0,
+      "n_caveats": 0,
+      "latency_ms": 2620,
+      "error": null,
+      "code": "import time\n\nfrom typing_extensions import TypedDict\nfrom langgraph.graph import StateGraph\n\n\nclass State(TypedDict):\n    x: int\n    result: int\n\n\ndef expensive_node(state: State) -> dict:\n    time.sleep(2)\n    return {\"result\": state[\"x\"] * 2}\n\n\nbuilder = StateGraph(State)\nbuilder.add_node(\"expensive_node\", expensive_node)\nbuilder.set_entry_point(\"expensive_node\")\nbuilder.set_finish_point(\"expensive_node\")\ngraph = builder.compile()",
+      "changes": [],
+      "caveats": []
+    },
+    {
+      "id": "mig-004",
+      "kind": "modernize",
+      "scores": {
+        "parses": true,
+        "deprecated_removed": false,
+        "idiom_present": false,
+        "citation_coverage": 0.0
+      },
+      "n_changes": 0,
+      "n_caveats": 0,
+      "latency_ms": 1558,
+      "error": null,
+      "code": "from typing_extensions import TypedDict\nfrom langgraph.graph import StateGraph\n\n\nclass State(TypedDict):\n    topic: str\n\n\nclass ConfigSchema(TypedDict):\n    llm: str\n\n\ngraph = StateGraph(State, config_schema=ConfigSchema)",
+      "changes": [],
+      "caveats": []
+    },
+    {
+      "id": "mig-005",
+      "kind": "modernize",
+      "scores": {
+        "parses": true,
+        "deprecated_removed": false,
+        "idiom_present": false,
+        "citation_coverage": 0.0
+      },
+      "n_changes": 0,
+      "n_caveats": 0,
+      "latency_ms": 1858,
+      "error": null,
+      "code": "from typing_extensions import TypedDict\nfrom langgraph.graph import StateGraph, START\n\n\nclass State(TypedDict):\n    answer: str\n\n\nclass ConfigSchema(TypedDict):\n    model: str\n\n\ndef node_a(state, config):\n    model = config.get(\"configurable\", {}).get(\"model\", \"openai\")\n    return {\"answer\": model}\n\n\nbuilder = StateGraph(State, config_schema=ConfigSchema)\nbuilder.add_node(\"node_a\", node_a)\nbuilder.add_edge(START, \"node_a\")\ngraph = builder.compile()",
+      "changes": [],
+      "caveats": []
+    },
+    {
+      "id": "mig-006",
+      "kind": "modernize",
+      "scores": {
+        "parses": true,
+        "deprecated_removed": false,
+        "idiom_present": false,
+        "citation_coverage": 0.0
+      },
+      "n_changes": 0,
+      "n_caveats": 0,
+      "latency_ms": 1456,
+      "error": null,
+      "code": "from langchain_openai import ChatOpenAI\nfrom langgraph.prebuilt import create_react_agent\n\nmodel = ChatOpenAI()\n\ndef book_hotel(hotel_name: str) -> str:\n    \"\"\"Book a hotel by name.\"\"\"\n    return f\"Booked {hotel_name}\"\n\nagent = create_react_agent(model, [book_hotel])",
+      "changes": [],
+      "caveats": []
+    },
+    {
+      "id": "mig-007",
+      "kind": "modernize",
+      "scores": {
+        "parses": true,
+        "deprecated_removed": false,
+        "idiom_present": false,
+        "citation_coverage": 0.0
+      },
+      "n_changes": 0,
+      "n_caveats": 0,
+      "latency_ms": 1607,
+      "error": null,
+      "code": "from langchain_openai import ChatOpenAI\nfrom langgraph.prebuilt import create_react_agent\n\nmodel = ChatOpenAI()\n\ndef agent_1(query: str) -> str:\n    \"\"\"Call the research sub-agent.\"\"\"\n    return model.invoke(query).content\n\ndef agent_2(query: str) -> str:\n    \"\"\"Call the math sub-agent.\"\"\"\n    return model.invoke(query).content\n\ntools = [agent_1, agent_2]\nsupervisor = create_react_agent(model, tools)",
+      "changes": [],
+      "caveats": []
+    },
+    {
+      "id": "mig-008",
+      "kind": "modernize",
+      "scores": {
+        "parses": true,
+        "deprecated_removed": false,
+        "idiom_present": false,
+        "citation_coverage": 0.0
+      },
+      "n_changes": 0,
+      "n_caveats": 0,
+      "latency_ms": 1834,
+      "error": null,
+      "code": "from typing_extensions import TypedDict\nfrom langgraph.graph import StateGraph\n\n\nclass State(TypedDict):\n    question: str\n    answer: str\n\n\nclass ConfigSchema(TypedDict):\n    system_prompt: str\n\n\ndef respond(state: State) -> dict:\n    return {\"answer\": state[\"question\"].upper()}\n\n\nbuilder = StateGraph(State, config_schema=ConfigSchema)\nbuilder.add_node(\"respond\", respond)\nbuilder.set_entry_point(\"respond\")\ngraph = builder.compile()",
+      "changes": [],
+      "caveats": []
+    },
+    {
+      "id": "mig-009",
+      "kind": "modernize",
+      "scores": {
+        "parses": true,
+        "deprecated_removed": false,
+        "idiom_present": false,
+        "citation_coverage": 0.0
+      },
+      "n_changes": 0,
+      "n_caveats": 0,
+      "latency_ms": 1970,
+      "error": null,
+      "code": "from typing_extensions import TypedDict\nfrom langgraph.graph import StateGraph, END\n\n\nclass State(TypedDict):\n    text: str\n\n\ndef step_one(state: State) -> dict:\n    return {\"text\": state[\"text\"].strip()}\n\n\ndef step_two(state: State) -> dict:\n    return {\"text\": state[\"text\"].lower()}\n\n\nbuilder = StateGraph(State)\nbuilder.add_node(\"step_one\", step_one)\nbuilder.add_node(\"step_two\", step_two)\nbuilder.set_entry_point(\"step_one\")\nbuilder.add_edge(\"step_one\", \"step_two\")\nbuilder.add_edge(\"step_two\", END)\ngraph = builder.compile()",
+      "changes": [],
+      "caveats": []
+    },
+    {
+      "id": "mig-010",
+      "kind": "modernize",
+      "scores": {
+        "parses": true,
+        "deprecated_removed": false,
+        "idiom_present": false,
+        "citation_coverage": 0.0
+      },
+      "n_changes": 0,
+      "n_caveats": 0,
+      "latency_ms": 1468,
+      "error": null,
+      "code": "from typing_extensions import TypedDict\nfrom langgraph.graph import MessagesState, StateGraph, START\n\n\nclass Config(TypedDict):\n    user_id: str\n\ndef call_model(state: MessagesState) -> dict:\n    return {\"messages\": []}\n\n\nbuilder = StateGraph(MessagesState, config_schema=Config)\nbuilder.add_node(\"call_model\", call_model)\nbuilder.add_edge(START, \"call_model\")\ngraph = builder.compile()",
+      "changes": [],
+      "caveats": []
+    },
+    {
+      "id": "mig-011",
+      "kind": "flag",
+      "scores": {
+        "parses": true,
+        "flagged_not_rewritten": false
+      },
+      "n_changes": 0,
+      "n_caveats": 0,
+      "latency_ms": 1850,
+      "error": null,
+      "code": "from typing_extensions import TypedDict\nfrom langgraph.checkpoint.memory import MemorySaver\nfrom langgraph.graph import StateGraph, START, END\n\n\nclass State(TypedDict):\n    value: str\n\n\ndef node_a(state: State) -> dict:\n    return {\"value\": \"a\"}\n\n\nbuilder = StateGraph(State)\nbuilder.add_node(\"node_a\", node_a)\nbuilder.add_edge(START, \"node_a\")\nbuilder.add_edge(\"node_a\", END)\n\ngraph = builder.compile(\n    interrupt_before=[\"node_a\"],\n    checkpointer=MemorySaver(),\n)",
+      "changes": [],
+      "caveats": []
+    },
+    {
+      "id": "mig-012",
+      "kind": "flag",
+      "scores": {
+        "parses": true,
+        "flagged_not_rewritten": false
+      },
+      "n_changes": 0,
+      "n_caveats": 0,
+      "latency_ms": 1065,
+      "error": null,
+      "code": "config = {\"configurable\": {\"thread_id\": \"some_thread\"}}\n\nresult = graph.invoke(\n    inputs,\n    config=config,\n    interrupt_before=[\"node_a\"],\n)",
+      "changes": [],
+      "caveats": []
+    },
+    {
+      "id": "mig-013",
+      "kind": "flag",
+      "scores": {
+        "parses": true,
+        "flagged_not_rewritten": false
+      },
+      "n_changes": 0,
+      "n_caveats": 0,
+      "latency_ms": 994,
+      "error": null,
+      "code": "config = {\"configurable\": {\"thread_id\": \"1\"}}\ngraph.update_state(config, {\"foo\": 2, \"bar\": [\"b\"]})",
+      "changes": [],
+      "caveats": []
+    },
+    {
+      "id": "mig-014",
+      "kind": "flag",
+      "scores": {
+        "parses": true,
+        "flagged_not_rewritten": false
+      },
+      "n_changes": 0,
+      "n_caveats": 0,
+      "latency_ms": 1128,
+      "error": null,
+      "code": "config = {\"configurable\": {\"thread_id\": \"42\"}}\ngraph.update_state(\n    config,\n    {\"messages\": [approved_message]},\n    as_node=\"agent\",\n)",
+      "changes": [],
+      "caveats": []
+    },
+    {
+      "id": "mig-015",
+      "kind": "flag",
+      "scores": {
+        "parses": true,
+        "flagged_not_rewritten": false
+      },
+      "n_changes": 0,
+      "n_caveats": 0,
+      "latency_ms": 1150,
+      "error": null,
+      "code": "from langgraph.checkpoint.sqlite import SqliteSaver\n\ncheckpointer = SqliteSaver.from_conn_string(\"checkpoints.db\")\ngraph = builder.compile(checkpointer=checkpointer)",
+      "changes": [],
+      "caveats": []
+    },
+    {
+      "id": "mig-016",
+      "kind": "flag",
+      "scores": {
+        "parses": true,
+        "flagged_not_rewritten": false
+      },
+      "n_changes": 0,
+      "n_caveats": 0,
+      "latency_ms": 1560,
+      "error": null,
+      "code": "from langgraph.checkpoint.memory import MemorySaver\n\ngraph = builder.compile(\n    checkpointer=MemorySaver(),\n    interrupt_before=[\"tools\"],\n)\n\nconfig = {\"configurable\": {\"thread_id\": \"7\"}}\ngraph.invoke({\"messages\": [(\"user\", \"hi\")]}, config=config)\ngraph.update_state(config, {\"messages\": [approved_message]})",
+      "changes": [],
+      "caveats": []
+    },
+    {
+      "id": "mig-017",
+      "kind": "clean",
+      "scores": {
+        "parses": true,
+        "clean_passthrough": true
+      },
+      "n_changes": 0,
+      "n_caveats": 0,
+      "latency_ms": 2851,
+      "error": null,
+      "code": "from typing_extensions import TypedDict\nfrom langgraph.graph import StateGraph, START, END\n\n\nclass State(TypedDict):\n    value: int\n\n\ndef node_a(state: State) -> dict:\n    return {\"value\": state[\"value\"] + 1}\n\n\ndef routing_function(state: State) -> str:\n    return \"node_b\" if state[\"value\"] > 0 else \"node_c\"\n\n\ndef node_b(state: State) -> dict:\n    return {\"value\": 0}\n\n\ndef node_c(state: State) -> dict:\n    return {\"value\": -1}\n\n\nbuilder = StateGraph(State)\nbuilder.add_node(\"node_a\", node_a)\nbuilder.add_node(\"node_b\", node_b)\nbuilder.add_node(\"node_c\", node_c)\nbuilder.add_edge(START, \"node_a\")\nbuilder.add_conditional_edges(\"node_a\", routing_function)\nbuilder.add_edge(\"node_b\", END)\nbuilder.add_edge(\"node_c\", END)\ngraph = builder.compile()",
+      "changes": [],
+      "caveats": []
+    },
+    {
+      "id": "mig-018",
+      "kind": "clean",
+      "scores": {
+        "parses": true,
+        "clean_passthrough": true
+      },
+      "n_changes": 0,
+      "n_caveats": 0,
+      "latency_ms": 1938,
+      "error": null,
+      "code": "from typing import Annotated\n\nfrom langchain_core.messages import AnyMessage\nfrom langgraph.graph import MessagesState\nfrom langgraph.graph.message import add_messages\nfrom typing_extensions import TypedDict\n\n\nclass GraphState(TypedDict):\n    messages: Annotated[list[AnyMessage], add_messages]\n\n\nclass State(MessagesState):\n    documents: list[str]",
+      "changes": [],
+      "caveats": []
+    },
+    {
+      "id": "mig-019",
+      "kind": "clean",
+      "scores": {
+        "parses": true,
+        "clean_passthrough": true
+      },
+      "n_changes": 0,
+      "n_caveats": 0,
+      "latency_ms": 2029,
+      "error": null,
+      "code": "from typing_extensions import TypedDict\nfrom langgraph.checkpoint.memory import MemorySaver\nfrom langgraph.graph import StateGraph, START\nfrom langgraph.types import Command, interrupt\n\n\nclass State(TypedDict):\n    text: str\n\n\ndef review(state: State) -> dict:\n    answer = interrupt({\"question\": \"Approve this text?\"})\n    return {\"text\": answer}\n\n\nbuilder = StateGraph(State)\nbuilder.add_node(\"review\", review)\nbuilder.add_edge(START, \"review\")\ngraph = builder.compile(checkpointer=MemorySaver())\n\nconfig = {\"configurable\": {\"thread_id\": \"1\"}}\ngraph.invoke({\"text\": \"draft\"}, config=config)\ngraph.invoke(Command(resume=\"approved\"), config=config)",
+      "changes": [],
+      "caveats": []
+    },
+    {
+      "id": "mig-020",
+      "kind": "clean",
+      "scores": {
+        "parses": true,
+        "clean_passthrough": true
+      },
+      "n_changes": 0,
+      "n_caveats": 0,
+      "latency_ms": 2454,
+      "error": null,
+      "code": "from typing_extensions import TypedDict\nfrom langgraph.graph import StateGraph, START, END\nfrom langgraph.types import Send\n\n\nclass OverallState(TypedDict):\n    subjects: list[str]\n    jokes: list[str]\n\n\ndef plan(state: OverallState) -> dict:\n    return {}\n\n\ndef continue_to_jokes(state: OverallState):\n    return [Send(\"generate_joke\", {\"subject\": s}) for s in state[\"subjects\"]]\n\n\ndef generate_joke(state) -> dict:\n    return {\"jokes\": [\"a joke about \" + state[\"subject\"]]} \n\n\nbuilder = StateGraph(OverallState)\nbuilder.add_node(\"plan\", plan)\nbuilder.add_node(\"generate_joke\", generate_joke)\nbuilder.add_edge(START, \"plan\")\nbuilder.add_conditional_edges(\"plan\", continue_to_jokes)\nbuilder.add_edge(\"generate_joke\", END)\ngraph = builder.compile()",
+      "changes": [],
+      "caveats": []
+    }
+  ]
+}
