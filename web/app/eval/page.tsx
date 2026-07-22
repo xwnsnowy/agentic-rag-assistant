@@ -4,6 +4,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import {
   HEADLINE,
   META,
+  MIXED_CORPUS_NOTE,
   RAGAS,
   RETRIEVAL_COLS,
   RETRIEVAL_ROWS,
@@ -99,6 +100,9 @@ export default function EvalPage() {
           </tbody>
         </table>
       </div>
+      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+        {MIXED_CORPUS_NOTE}
+      </p>
 
       {/* Ragas */}
       <h2 className="mt-10 text-lg font-semibold">Generation — Ragas (real library)</h2>

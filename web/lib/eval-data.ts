@@ -22,7 +22,14 @@ export const RETRIEVAL_ROWS: {
   { config: "baseline (vector)", values: [0.977, 0.902, 0.627, 0.9, 0.89, 0.88, "1422ms"] },
   { config: "hybrid (RRF)", values: [0.977, 0.896, 0.627, 0.9, 0.9, 0.89, "2028ms"] },
   { config: "hybrid + rerank", best: true, values: [1.0, 0.928, 0.727, 0.92, 0.92, 0.91, "3001ms"] },
+  // Stage 2 harder condition — ai/eval/results/eval_mixed_corpus.json.
+  // Retrieval-only run (no judge, rerank inactive), hence "—" generation columns.
+  { config: "hybrid (mixed corpus, unfiltered)", values: [0.909, 0.647, 0.345, "—", "—", "—", "2224ms"] },
 ];
+
+// One-line reading of the mixed-corpus row, shown under the table.
+export const MIXED_CORPUS_NOTE =
+  "Stage 2 deliberately made the problem harder: with the deprecated v0.2 docs in the same index and no version filter, 2.6 of the top-5 chunks on average come from the wrong version — MRR falls 0.91 → 0.65 and P@5 0.63 → 0.35. Version-filtered retrieval (all other rows) recovers the published quality. Retrieval-only run: no LLM-judge, reranking inactive.";
 
 export const RAGAS = [
   { label: "faithfulness", value: 0.934 },
