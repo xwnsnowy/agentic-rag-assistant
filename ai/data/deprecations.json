@@ -1,0 +1,144 @@
+{
+  "meta": {
+    "purpose": "Curated v0.2 -> v1.0 API-status map for check_api_status and the migration workbench. Every entry was verified by grepping the two pinned corpora on disk (data/raw/ = docs tag 1.0.10, data/raw-0.2/ = docs tag 0.2.76) - no entry is written from model memory.",
+    "statuses": {
+      "deprecated": "Still works in v1.0 and the v1.0 docs SAY so, but they recommend the replacement as the modern syntax.",
+      "renamed": "The v1.0 docs teach a differently-named symbol for the same purpose; the old name has zero mentions in the v1.0 corpus.",
+      "moved": "Lives in a different package (and possibly under a different name) in the v1.0 docs.",
+      "unchanged": "Used the same way in both corpora; no migration needed.",
+      "unevidenced": "Taught by the v0.2 docs but absent from the pinned v1.0 corpus. Absence from a 12-page corpus is NOT proof of removal, so no removed/renamed verdict is claimed - the note records what the corpora actually show."
+    },
+    "no_removed_entries_note": "No entry carries status 'removed': neither corpus contains language evidencing an actual removal, and claiming one from memory is exactly the plausible-but-wrong failure this map exists to prevent.",
+    "doc_slug_note": "doc_slug names the page holding the primary evidence; doc_version says which corpus manifest that slug belongs to (manifest.json for 1.0, manifest-0.2.json for 0.2). Chunk ids are deliberately never stored here - they are reassigned on every re-ingest."
+  },
+  "entries": [
+    {
+      "symbol": "set_entry_point",
+      "status": "deprecated",
+      "replacement": "add_edge(START, node)",
+      "note": "v1.0 graph-api.md uses it in a live caching example and states in a Note: 'Both methods are valid but add_edge(START, ...) and add_edge(..., END) are the recommended modern syntax.' Not removed - discouraged.",
+      "doc_slug": "graph-api",
+      "doc_version": "1.0"
+    },
+    {
+      "symbol": "set_finish_point",
+      "status": "deprecated",
+      "replacement": "add_edge(node, END)",
+      "note": "Same v1.0 graph-api.md Note as set_entry_point: valid, but add_edge(..., END) is the recommended modern syntax.",
+      "doc_slug": "graph-api",
+      "doc_version": "1.0"
+    },
+    {
+      "symbol": "config_schema",
+      "status": "renamed",
+      "replacement": "context_schema",
+      "note": "v0.2 low_level.md teaches StateGraph(State, config_schema=...) for run-scoped configuration; v1.0 graph-api.md and add-memory.md teach StateGraph(State, context_schema=...) for the same purpose. config_schema has zero mentions in the v1.0 corpus.",
+      "doc_slug": "graph-api",
+      "doc_version": "1.0"
+    },
+    {
+      "symbol": "create_react_agent",
+      "status": "moved",
+      "replacement": "langchain.agents.create_agent",
+      "note": "v0.2 multi_agent.md imports it from langgraph.prebuilt; the v1.0 corpus never mentions create_react_agent and instead uses 'from langchain.agents import create_agent' (use-subgraphs.md, graph-api.md) for the prebuilt-agent role.",
+      "doc_slug": "use-subgraphs",
+      "doc_version": "1.0"
+    },
+    {
+      "symbol": "interrupt_before",
+      "status": "unevidenced",
+      "replacement": "interrupt()",
+      "note": "v0.2 breakpoints.md teaches static breakpoints via compile(interrupt_before=[...]). The pinned v1.0 corpus never mentions interrupt_before and teaches the dynamic interrupt() function instead (graph-api.md, sql-agent.md). The corpora cannot confirm the compile-time kwarg was removed - only that v1.0 docs no longer teach it.",
+      "doc_slug": "breakpoints",
+      "doc_version": "0.2"
+    },
+    {
+      "symbol": "update_state",
+      "status": "unevidenced",
+      "replacement": null,
+      "note": "v0.2 persistence.md, breakpoints.md and time-travel.md all teach graph.update_state() for editing checkpointed state. The pinned v1.0 corpus has zero mentions; for resuming after an interrupt it teaches Command(resume=...). The corpora cannot confirm removal of the method itself.",
+      "doc_slug": "persistence",
+      "doc_version": "0.2"
+    },
+    {
+      "symbol": "SqliteSaver",
+      "status": "unevidenced",
+      "replacement": null,
+      "note": "v0.2 persistence.md lists langgraph-checkpoint-sqlite (SqliteSaver / AsyncSqliteSaver) as a checkpointer backend. The pinned v1.0 corpus never mentions a SQLite checkpointer, while PostgresSaver appears in both corpora. Absence from 12 pages is not proof of removal.",
+      "doc_slug": "persistence",
+      "doc_version": "0.2"
+    },
+    {
+      "symbol": "StateGraph",
+      "status": "unchanged",
+      "replacement": null,
+      "note": "The core graph builder in both corpora (v0.2 low_level.md; v1.0 graph-api.md and nearly every other page). Constructor kwargs changed (see config_schema), the class did not.",
+      "doc_slug": "graph-api",
+      "doc_version": "1.0"
+    },
+    {
+      "symbol": "add_conditional_edges",
+      "status": "unchanged",
+      "replacement": null,
+      "note": "Taught with the same signature in v0.2 low_level.md and v1.0 graph-api.md / workflows-agents.md.",
+      "doc_slug": "graph-api",
+      "doc_version": "1.0"
+    },
+    {
+      "symbol": "add_messages",
+      "status": "unchanged",
+      "replacement": null,
+      "note": "The message-list reducer appears in both corpora (v0.2 low_level.md; v1.0 graph-api.md) used the same way with Annotated state.",
+      "doc_slug": "graph-api",
+      "doc_version": "1.0"
+    },
+    {
+      "symbol": "MessagesState",
+      "status": "unchanged",
+      "replacement": null,
+      "note": "The prebuilt messages state schema is used throughout both corpora (34 mentions in v0.2, 100+ in v1.0).",
+      "doc_slug": "graph-api",
+      "doc_version": "1.0"
+    },
+    {
+      "symbol": "MemorySaver",
+      "status": "unchanged",
+      "replacement": null,
+      "note": "Both corpora import it from langgraph.checkpoint.memory and pass it to compile(checkpointer=...) (v0.2 human_in_the_loop.md; v1.0 streaming.md, use-subgraphs.md). v1.0 docs also use InMemorySaver; both names appear in working v1.0 examples.",
+      "doc_slug": "streaming",
+      "doc_version": "1.0"
+    },
+    {
+      "symbol": "ToolNode",
+      "status": "unchanged",
+      "replacement": null,
+      "note": "Same import path in both corpora: 'from langgraph.prebuilt import ToolNode' (v0.2 low_level.md reference; v1.0 workflows-agents.md, agentic-rag.md, sql-agent.md).",
+      "doc_slug": "workflows-agents",
+      "doc_version": "1.0"
+    },
+    {
+      "symbol": "interrupt",
+      "status": "unchanged",
+      "replacement": null,
+      "note": "The dynamic interrupt() function exists in both corpora (v0.2 human_in_the_loop.md, low_level.md; v1.0 graph-api.md, sql-agent.md, use-subgraphs.md). It is the v1.0-taught path that replaced static breakpoints in the docs.",
+      "doc_slug": "graph-api",
+      "doc_version": "1.0"
+    },
+    {
+      "symbol": "Command",
+      "status": "unchanged",
+      "replacement": null,
+      "note": "Command (goto / update / resume) is taught in both corpora (v0.2 low_level.md, human_in_the_loop.md, multi_agent.md; v1.0 graph-api.md, streaming.md, use-subgraphs.md).",
+      "doc_slug": "graph-api",
+      "doc_version": "1.0"
+    },
+    {
+      "symbol": "Send",
+      "status": "unchanged",
+      "replacement": null,
+      "note": "The map-reduce Send API appears in both corpora (v0.2 low_level.md, agentic_concepts.md; v1.0 graph-api.md, workflows-agents.md).",
+      "doc_slug": "graph-api",
+      "doc_version": "1.0"
+    }
+  ]
+}
