@@ -3,7 +3,11 @@
 Usage (from ai/):
   python -m scripts.run_migration_eval                 # baseline (bare LLM, no retrieval/tools)
   python -m scripts.run_migration_eval --judge         # + LLM-judge corroboration
-  python -m scripts.run_migration_eval --mode agent    # S2.4 migration graph (not built yet)
+  python -m scripts.run_migration_eval --mode agent    # S2.4 migration graph
+
+Both modes are mapped into the same MigrationOutput contract and scored by the
+IDENTICAL code path in eval/migration_harness.py — the baseline-vs-agent
+comparison is apples-to-apples by construction, never by parallel metrics.
 
 `--mode baseline` is the control this whole phase is measured against: one bare
 chat call per snippet ("migrate this to LangGraph v1.0"), no retrieval, no
@@ -88,25 +92,85 @@ def baseline_preamble(summary: dict) -> str:
     )
 
 
+def agent_runner(item: dict) -> MigrationOutput:
+    """The S2.4 migration graph, mapped into the SAME output contract the
+    baseline uses — the harness cannot tell the runners apart by shape."""
+    from app.migrate import run_migrate  # lazy: keep module importable without keys
+
+    res = run_migrate(item["legacy_code"])
+    if res.error:  # dataset items all parse, but score a reject honestly as-is
+        return MigrationOutput(code="", caveats=(res.error,))
+    changes = tuple(
+        Change(description=c["description"], citations=tuple(c["citation_slugs"]))
+        for c in res.changes
+    )
+    return MigrationOutput(
+        code=res.rewritten, changes=changes, caveats=tuple(res.caveats)
+    )
+
+
+def agent_preamble(summary: dict) -> str:
+    """Context header for the agent table; the baseline comparison is loaded
+    from the committed baseline JSON so the two files can never disagree."""
+    baseline_path = RESULTS / "migration_baseline.json"
+    rows = summary["rows"]
+    n_changes = sum(r["n_changes"] for r in rows)
+    n_caveats = sum(r["n_caveats"] for r in rows)
+    lines = [
+        "**S2.4 — the migration graph** (`app/migrate.py`): deterministic AST `detect`",
+        "against `data/deprecations.json`, `research` via check_api_status + rag_search",
+        "over the pinned corpora, one grounded structured-output `rewrite`, deterministic",
+        "`verify` with one bounded retry. Scored by the identical harness code path as",
+        "the raw-LLM baseline.",
+        "",
+        f"Across all {summary['n']} items the graph reported **{n_changes} changes** and "
+        f"**{n_caveats} caveats**.",
+        "",
+        "Reproduce: `python -m scripts.run_migration_eval --mode agent` (from `ai/`).",
+        "",
+    ]
+    if baseline_path.exists():
+        base = json.loads(baseline_path.read_text(encoding="utf-8"))["metrics"]
+        m = summary["metrics"]
+        lines += [
+            "| metric | raw-LLM baseline | migration graph |",
+            "|---|---|---|",
+        ]
+        for key in (
+            "parses",
+            "deprecated_removed",
+            "idiom_present",
+            "citation_coverage",
+            "clean_passthrough",
+            "flagged_not_rewritten",
+        ):
+            lines.append(f"| {key} | {base[key]:.3f} | **{m[key]:.3f}** |")
+        lines.append("")
+    return "\n".join(lines)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--mode", choices=["baseline", "agent"], default="baseline")
     ap.add_argument("--judge", action="store_true", help="add LLM-judge corroboration")
     args = ap.parse_args()
 
-    if args.mode == "agent":
-        raise SystemExit(
-            "--mode agent is not implemented until S2.4: the migration graph "
-            "(app/migrate.py) does not exist yet. Run --mode baseline."
-        )
-
     from app.config import get_settings  # noqa: PLC0415
 
-    label = f"raw-LLM baseline ({get_settings().llm_model}, no retrieval, no tools)"
-    summary = run_migration_eval(baseline_runner, label=label, judge=args.judge)
+    if args.mode == "agent":
+        label = (
+            f"migration graph ({get_settings().llm_model}, "
+            "detect -> research -> rewrite -> verify, pinned corpora)"
+        )
+        summary = run_migration_eval(agent_runner, label=label, judge=args.judge)
+        preamble = agent_preamble(summary)
+    else:
+        label = f"raw-LLM baseline ({get_settings().llm_model}, no retrieval, no tools)"
+        summary = run_migration_eval(baseline_runner, label=label, judge=args.judge)
+        preamble = baseline_preamble(summary)
     md = render_markdown(summary)
     head, _, rest = md.partition("\n")
-    md = f"{head}\n\n{baseline_preamble(summary)}{rest}"
+    md = f"{head}\n\n{preamble}{rest}"
 
     # Save BEFORE printing: the run costs real API calls, and a Windows cp1252
     # console choking on a checkmark must not be able to discard the results.
