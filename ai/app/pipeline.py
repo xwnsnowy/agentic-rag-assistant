@@ -73,6 +73,13 @@ def _pool_entry(r: Result) -> dict:
         "page_title": m.get("page_title"),
         "heading": m.get("heading"),
         "source_url": m.get("source_url"),
+        # Additive (S2.5): with two corpora in the index, a trace row is only
+        # honest if it says WHICH corpus it came from — the workbench's flag
+        # path retrieves from v0.2 by design, and without the version tag that
+        # would look like a retrieval bug in the inspector. Chat consumers
+        # ignore the extra keys (the SSE dispatch drops unknown fields).
+        "slug": m.get("slug"),
+        "docs_version": m.get("docs_version"),
         "vector_rank": r.vector_rank,
         "vector_score": r.vector_score,
         "keyword_rank": r.keyword_rank,

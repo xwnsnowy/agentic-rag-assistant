@@ -151,6 +151,7 @@ def test_pool_entries_have_no_content_and_exactly_the_documented_keys(monkeypatc
 
     expected_keys = {
         "chunk_id", "page_title", "heading", "source_url",
+        "slug", "docs_version",
         "vector_rank", "vector_score", "keyword_rank", "keyword_score",
         "rrf_score", "rerank_score",
     }
