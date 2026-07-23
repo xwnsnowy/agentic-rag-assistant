@@ -46,7 +46,7 @@ layer. Do not collapse the Python layer into TS.
   reads the body with a stream reader). No Vercel AI SDK — the backend is FastAPI, so plain
   SSE is simpler than adapting the SDK's data-stream protocol.
 
-## Build phases (current status: Phase 0, 1, 2 COMPLETE. Phase 1 eval proves hybrid+rerank > baseline; Phase 2 LangGraph agent picks tools at 0.917 accuracy with guardrails. Next: Phase 3 polish, optional.)
+## Build phases (current status: Phase 0–3 COMPLETE. Phase 1 eval proves hybrid+rerank > baseline; Phase 2 agent picks among 4 tools at 1.000 accuracy (21 items) with guardrails; Phase 3 delivered visible reasoning + the `/migrate` Migration Workbench — see PHASE_3.md. Blocked on a rotated Cohere key: rerank rank-movement UI + a judged re-baseline.)
 
 - **Phase 0 — Foundation.** Scaffold `web/` and `ai/`, enable pgvector, create the `chunks`
   table, get one chunk inserted + cosine-similarity query working, and a Next.js -> FastAPI
@@ -59,8 +59,12 @@ layer. Do not collapse the Python layer into TS.
 - **Phase 2 — Agent layer.** Wrap retrieval as a tool; add 1-2 more tools (web search,
   db query/calculator); LangGraph orchestration; guardrails (max loops, tool-error handling,
   input/output validation). Measure tool-selection accuracy.
-- **Phase 3 (optional) — Production polish.** Streaming UX, caching, rate limiting/auth,
-  deploy, README with eval results.
+- **Phase 3 — Visible reasoning + Migration Workbench** (production polish — streaming,
+  caching, deploy — landed early as expansions). Stage 1: unit tests gating CI, retrieval
+  trace, `node`/`retrieval` SSE events, live agent-graph + "Show work" inspector on `/chat`.
+  Stage 2: versioned corpus (v0.2 beside v1.0), mixed-corpus eval, `check_api_status`,
+  migration eval (raw-LLM baseline first), the `detect → research → rewrite → verify`
+  migration graph, and the `/migrate` UI. Full DoD + findings in `PHASE_3.md`.
 
 ## `chunks` table (Phase 0 target schema)
 
@@ -116,7 +120,7 @@ lightweight.
 Fill these in during Phase 0 once scaffolded, and update them whenever they change. This section
 is the first place to look for how to run anything.
 
-- web dev: `cd web && NODE_OPTIONS=--use-system-ca pnpm dev` (http://localhost:3000)
+- web dev: `cd web && NODE_OPTIONS=--use-system-ca pnpm dev` (http://localhost:3000 — routes: `/chat`, `/migrate` migration workbench, `/eval` dashboard)
 - web build: `cd web && NODE_OPTIONS=--use-system-ca pnpm build`
 - web test: `cd web && NODE_OPTIONS=--use-system-ca pnpm test` (vitest; covers the SSE frame parser in `lib/sse.ts`)
 - web deps: `cd web && NODE_OPTIONS=--use-system-ca pnpm install`

@@ -1,4 +1,4 @@
-# Phase 3 — Visible reasoning + Migration Workbench 🚧 Stage 1 COMPLETE, Stage 2 next
+# Phase 3 — Visible reasoning + Migration Workbench ✅ COMPLETE (two sub-items blocked on a Cohere key, marked below)
 
 > **The problem this phase fixes.** The backend does a lot per question — embed, two
 > searches, RRF fusion over 40 candidates, a cross-encoder pass over 20, tool selection,
@@ -113,9 +113,12 @@ to *"why does this need to exist when ChatGPT exists?"*
 
 ### Definition of Done
 
-- [ ] **S2.0 — Both doc versions coexist.** `SELECT docs_version, count(*) FROM chunks`
+- [x] **S2.0 — Both doc versions coexist.** `SELECT docs_version, count(*) FROM chunks`
       shows v1.0 and v0.2; re-ingesting one version leaves the other's embeddings intact;
       the v1.0 retrieval numbers reproduce within noise.
+      *Evidence: `eval/results/eval_mixed_corpus.md` — corpus in DB `v0.2: 154 · v1.0: 244`,
+      and the filtered keyword/baseline rows reproduce the published Phase 1 numbers
+      bit-identically (hybrid differs by exactly the documented gd-001 tie).*
 - [x] **S2.1 — The corpus got harder, measured.** Relevance identity is now
       `(docs_version, slug)` — needed because `persistence` and `streaming` exist as slugs
       in *both* corpora, so slug-only matching would have counted a v0.2 chunk as a correct
@@ -141,12 +144,28 @@ to *"why does this need to exist when ChatGPT exists?"*
       no code change. Ties now break by `id`; verified stable across three runs. The old
       figure was one valid ordering, not an error — but an unreproducible measurement is not
       a measurement.
-- [ ] **S2.2 — `check_api_status` answers with evidence** — verdict from a curated map,
-      corroborated by per-version occurrence counts from the corpus itself.
-- [ ] **S2.3 — A migration eval exists, with a raw-LLM baseline committed first.**
-- [ ] **S2.4 — The migration graph beats that baseline** on deprecated-pattern removal
+- [x] **S2.2 — `check_api_status` answers with evidence** — verdict from a curated map
+      (`data/deprecations.json`, 16 corpus-verified symbols), corroborated by per-version
+      occurrence counts from the corpus itself.
+      *Evidence: `eval/results/agent_eval.md` — the tool joined the agent and ag-18…ag-21
+      route to it correctly; tool-selection stayed at **1.000 over 21 items** with four
+      tools (risk #4 below predicted a dip that did not materialize).*
+- [x] **S2.3 — A migration eval exists, with a raw-LLM baseline committed first.**
+      *Evidence: `eval/results/migration_baseline.md` (commit `3bc25a6`, before any graph
+      code) — 20 items, parses 1.000, deprecated_removed 0.000: the bare model returns
+      legacy code essentially unchanged.*
+- [x] **S2.4 — The migration graph beats that baseline** on deprecated-pattern removal
       and citation coverage.
-- [ ] **S2.5 — `/migrate` works end-to-end** on the deployed preview.
+      *Evidence: `eval/results/migration_agent.md` — deprecated_removed 0.000 → 1.000,
+      citation_coverage 0.000 → 1.000, and flag/clean behaviour earned (1.000 each). Read
+      with that file's caveats: detection is by-construction from the map, and no metric
+      executes the rewritten code.*
+- [x] **S2.5 — `/migrate` works end-to-end** on the deployed preview.
+      *Evidence: verified live on the production deploy (2026-07-23): `POST /migrate` on
+      the Render backend took a `set_entry_point` snippet and returned a verified diff
+      (`add_edge(START, …)`, `verified: true`, citations to `graph-api`); the Vercel
+      `/migrate` page serves it. No results file — this box is a deployment check, not a
+      metric.*
 
 ### Steps
 
