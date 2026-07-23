@@ -4,6 +4,7 @@ import {
   BarChart3,
   BookOpen,
   ChevronRight,
+  GitCompare,
   Layers,
   ListChecks,
   Network,
@@ -66,6 +67,10 @@ const FAQ = [
   {
     q: "Does it hallucinate?",
     a: "Answers are grounded in retrieved chunks and include citations back to the source section. The system is evaluated against negative traps — questions the docs can't answer — and scores 1.000 on saying \"not found\" instead of inventing an API.",
+  },
+  {
+    q: "What is the Migration Workbench?",
+    a: "Paste legacy LangGraph v0.x Python and get a v1.0 rewrite as a diff, where every change cites the pinned docs. It covers a curated set of verified deprecations (not arbitrary code), flags APIs the pinned corpus can't evidence instead of guessing, and returns already-idiomatic code untouched.",
   },
 ];
 
@@ -201,6 +206,12 @@ export default function LandingPage() {
                 How it works
               </Link>
               <Link
+                href="/migrate"
+                className="hidden items-center gap-1.5 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
+              >
+                <GitCompare className="size-4" /> Migrate
+              </Link>
+              <Link
                 href="/eval"
                 className="hidden items-center gap-1.5 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
               >
@@ -268,6 +279,88 @@ export default function LandingPage() {
           </div>
 
           <AgentPanel />
+        </section>
+
+        {/* Migration Workbench — the headline capability. LLMs learned
+            LangGraph from pre-v1.0 tutorials, so they confidently emit dead
+            APIs; the workbench pins the docs and forces citations. Honest
+            scope: a curated deprecations set, not "any code". */}
+        <section className="glass glow-primary mt-20 grid gap-8 overflow-hidden rounded-3xl p-7 sm:p-9 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
+              <GitCompare className="size-3.5" /> the workbench
+            </span>
+            <h2 className="mt-5 text-balance text-3xl font-bold tracking-tight sm:text-4xl">
+              Paste legacy LangGraph,
+              <br />
+              get a <span className={GRAD}>cited v1.0 migration</span>
+            </h2>
+            <p className="mt-4 max-w-xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-[15px]">
+              A dedicated pipeline — detect → research → rewrite → verify — finds
+              deprecated v0.x patterns with an AST scan, looks up the replacement in
+              the pinned v1.0 docs, and returns a diff where{" "}
+              <span className="text-foreground/85">every change carries a citation</span>.
+            </p>
+            <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 size-1.5 flex-none rounded-full bg-emerald-500" />
+                Covers a curated, verified set of v0.x deprecations — not arbitrary code.
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 size-1.5 flex-none rounded-full bg-amber-500" />
+                APIs the pinned corpus can&apos;t evidence are flagged for review, never rewritten on faith.
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 size-1.5 flex-none rounded-full bg-violet-500" />
+                Already-idiomatic code comes back untouched — it never even reaches an LLM.
+              </li>
+            </ul>
+            <Link
+              href="/migrate"
+              className="mt-7 inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition-opacity hover:opacity-90"
+            >
+              Open the workbench <ArrowRight className="size-4" />
+            </Link>
+          </div>
+
+          {/* Static mini-diff illustration — the real thing, minus the stream. */}
+          <div className="min-w-0">
+            <div className="overflow-x-auto rounded-2xl border bg-background/60 py-3 font-mono text-[12px] leading-relaxed shadow-sm">
+              <p className="px-4 pb-2 text-[10.5px] uppercase tracking-widest text-muted-foreground">
+                migrate.diff
+              </p>
+              <p className="whitespace-pre bg-rose-500/[0.11] px-4 text-foreground/85">
+                <span className="select-none text-rose-600 dark:text-rose-400">− </span>
+                builder.set_entry_point(&quot;node&quot;)
+              </p>
+              <p className="whitespace-pre bg-emerald-500/[0.13] px-4 text-foreground/85">
+                <span className="select-none text-emerald-600 dark:text-emerald-400">+ </span>
+                builder.add_edge(START, &quot;node&quot;)
+                <span className="ml-2 align-super text-[9.5px] font-semibold text-primary">[1]</span>
+              </p>
+              <p className="whitespace-pre bg-rose-500/[0.11] px-4 text-foreground/85">
+                <span className="select-none text-rose-600 dark:text-rose-400">− </span>
+                StateGraph(State, config_schema=Cfg)
+              </p>
+              <p className="whitespace-pre bg-emerald-500/[0.13] px-4 text-foreground/85">
+                <span className="select-none text-emerald-600 dark:text-emerald-400">+ </span>
+                StateGraph(State, context_schema=Cfg)
+                <span className="ml-2 align-super text-[9.5px] font-semibold text-primary">[2]</span>
+              </p>
+              <p className="mt-2 border-t border-dashed px-4 pt-2 text-[11px] text-muted-foreground">
+                <span className="font-semibold text-primary">[1]</span> Graph API — Entry point{" "}
+                <span className="rounded border bg-card px-1 py-px text-[9px]">v1.0</span>
+              </p>
+              <p className="px-4 text-[11px] text-muted-foreground">
+                <span className="font-semibold text-primary">[2]</span> Graph API — Runtime context{" "}
+                <span className="rounded border bg-card px-1 py-px text-[9px]">v1.0</span>
+              </p>
+            </div>
+            <p className="mt-3 rounded-xl border border-dashed bg-muted/40 px-3.5 py-2.5 text-[11.5px] leading-relaxed text-muted-foreground">
+              Why not just ask ChatGPT? It learned LangGraph from pre-v1.0 tutorials and
+              confidently emits deprecated APIs. Pinned docs + forced citations are the fix.
+            </p>
+          </div>
         </section>
 
         {/* Headline stats */}
@@ -435,6 +528,7 @@ export default function LandingPage() {
           <p>{siteConfig.name} — a demo of retrieval engineering, evaluation, and agent orchestration.</p>
           <nav className="flex gap-4">
             <Link href="/chat" className="transition-colors hover:text-foreground">Chat</Link>
+            <Link href="/migrate" className="transition-colors hover:text-foreground">Migrate</Link>
             <Link href="/eval" className="transition-colors hover:text-foreground">Eval</Link>
           </nav>
         </footer>
