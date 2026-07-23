@@ -256,8 +256,8 @@ function Scores({ entry, showRerank }: { entry: PoolEntry; showRerank: boolean }
   );
 }
 
-// Title line: the text truncates, the "cited" badge never does — a truncating
-// paragraph would silently swallow the badge on long page titles.
+// Title line: the text truncates, the badges never do — a truncating
+// paragraph would silently swallow them on long page titles.
 function RowTitle({ entry, citedN }: { entry: PoolEntry; citedN: number | undefined }) {
   return (
     <p className="flex items-center gap-1.5 text-[11.5px] leading-4 text-foreground/85">
@@ -265,8 +265,21 @@ function RowTitle({ entry, citedN }: { entry: PoolEntry; citedN: number | undefi
         {entry.page_title ?? "?"}
         {entry.heading ? <span className="text-muted-foreground"> — {entry.heading}</span> : null}
       </span>
+      {/* Which corpus the chunk came from — load-bearing since S2.5, when two
+          docs versions coexist in the index: the workbench's flag path
+          retrieves from v0.2 BY DESIGN, and without the tag those rows would
+          read as wrong-corpus retrieval bugs. Older payloads omit the field. */}
+      {entry.docs_version ? <VersionBadge v={entry.docs_version} /> : null}
       {citedN !== undefined && <CitedBadge n={citedN} />}
     </p>
+  );
+}
+
+function VersionBadge({ v }: { v: string }) {
+  return (
+    <span className="flex-none whitespace-nowrap rounded border bg-card px-1 py-px font-mono text-[9px] leading-none text-muted-foreground">
+      v{v}
+    </span>
   );
 }
 

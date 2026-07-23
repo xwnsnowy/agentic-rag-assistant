@@ -90,7 +90,13 @@ export function AgentGraph({
       role="group"
       aria-label="Agent execution graph"
       className={cn(
-        "glass flex items-center gap-1.5 overflow-x-auto rounded-xl px-3 py-2 shadow-sm",
+        // `relative` is load-bearing: the sr-only live region below is
+        // absolutely positioned, and without a positioned ancestor its
+        // containing block is the page root — so when the pill row overflows
+        // (6 migration nodes on a phone) the span sits at its static position
+        // PAST the scroll container's clip and widens the whole page. Anchoring
+        // it here keeps the overflow inside this strip, where it scrolls.
+        "glass relative flex items-center gap-1.5 overflow-x-auto rounded-xl px-3 py-2 shadow-sm",
         className,
       )}
     >

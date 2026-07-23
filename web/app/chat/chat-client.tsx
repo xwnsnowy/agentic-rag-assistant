@@ -9,6 +9,7 @@ import {
   Calculator,
   ChevronRight,
   FolderTree,
+  GitCompare,
   Loader2,
   Plus,
   Send,
@@ -237,6 +238,14 @@ export default function ChatApp() {
             <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
             live
           </span>
+          <Link
+            href="/migrate"
+            className="inline-flex size-9 items-center justify-center rounded-md border bg-card text-muted-foreground shadow-sm transition-colors hover:text-foreground"
+            aria-label="Migration workbench"
+            title="Migration workbench"
+          >
+            <GitCompare className="size-4" />
+          </Link>
           <Link
             href="/eval"
             className="inline-flex size-9 items-center justify-center rounded-md border bg-card text-muted-foreground shadow-sm transition-colors hover:text-foreground"
