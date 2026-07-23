@@ -26,6 +26,10 @@ export type Citation = {
   page_title: string;
   heading: string;
   source_url: string;
+  // Additive (S2.5): present on /migrate citations (and newer /agent streams);
+  // older payloads simply omit them, so both stay optional.
+  slug?: string | null;
+  docs_version?: string | null;
 };
 
 export type AskResponse = {
@@ -95,6 +99,11 @@ export type PoolEntry = {
   keyword_score: number | null;
   rrf_score: number | null;
   rerank_score: number | null;
+  // Additive (S2.5): which corpus the chunk belongs to. Load-bearing on the
+  // /migrate flag path, which retrieves from the v0.2 docs by design — without
+  // the tag those trace rows would read as a retrieval bug.
+  slug?: string | null;
+  docs_version?: string | null;
 };
 
 // {"type":"retrieval","v":{...}} — one per rag_search call in the turn.
@@ -117,57 +126,146 @@ export type AgentStreamHandlers = {
   onDone?: (info: { thread_id: string; tools_used: string[] }) => void;
 };
 
-// Streaming variant of runAgent: reads the SSE body with a stream reader (no
-// Vercel AI SDK needed — the backend is FastAPI) and fires handlers per event.
-export async function runAgentStream(
-  question: string,
-  threadId: string | undefined,
-  handlers: AgentStreamHandlers,
+// One JSON event off either SSE stream. Extra top-level fields (thread_id,
+// tools_used on the agent's `done`) ride along untyped.
+type SseEvent = {
+  type: string;
+  v?: unknown;
+  thread_id?: string;
+  tools_used?: string[];
+};
+
+// Shared POST-and-stream plumbing for /agent/stream and /migrate/stream: one
+// fetch, one reader loop, one frame parser (lib/sse.ts — unit-tested; a frame
+// may span reads). Each caller only supplies its own event dispatch, so there
+// is exactly one SSE reader in the codebase.
+async function postSseStream(
+  path: string,
+  body: unknown,
+  onEvent: (ev: SseEvent) => void,
   signal?: AbortSignal,
 ): Promise<void> {
-  const res = await fetch(`${API_URL}/agent/stream`, {
+  const res = await fetch(`${API_URL}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question, thread_id: threadId }),
+    body: JSON.stringify(body),
     signal,
   });
   if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
 
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
-
-  // Frame re-assembly lives in lib/sse.ts (unit-tested; a frame may span
-  // reads). This loop only decodes bytes and dispatches parsed events.
-  // Unknown event types are deliberately ignored — that additivity is what
-  // lets backend and frontend deploy in either order.
   const parser = createSseParser((payload) => {
-    let ev: { type: string; v?: unknown; thread_id?: string; tools_used?: string[] };
+    let ev: SseEvent;
     try {
       ev = JSON.parse(payload);
     } catch {
       return;
     }
-    if (ev.type === "token") handlers.onToken?.(String(ev.v ?? ""));
-    else if (ev.type === "tools") handlers.onTools?.((ev.v as string[]) ?? []);
-    else if (ev.type === "citations") handlers.onCitations?.((ev.v as Citation[]) ?? []);
-    else if (ev.type === "node") {
-      const v = ev.v as NodeEvent | undefined;
-      if (v?.name && v.status) handlers.onNode?.(v);
-    } else if (ev.type === "retrieval") {
-      const v = ev.v as RetrievalTrace | undefined;
-      if (v) handlers.onRetrieval?.(v);
-    } else if (ev.type === "done")
-      handlers.onDone?.({
-        thread_id: ev.thread_id ?? "",
-        tools_used: ev.tools_used ?? [],
-      });
+    onEvent(ev);
   });
 
   for (;;) {
     // An abort fired mid-stream rejects this read() with an AbortError —
-    // that's the mechanism "New chat" / the stop button use to cancel.
+    // that's the mechanism the stop buttons / "New chat" use to cancel.
     const { done, value } = await reader.read();
     if (done) break;
     parser.push(decoder.decode(value, { stream: true }));
   }
+}
+
+// Streaming variant of runAgent: reads the SSE body with a stream reader (no
+// Vercel AI SDK needed — the backend is FastAPI) and fires handlers per event.
+// Unknown event types are deliberately ignored — that additivity is what
+// lets backend and frontend deploy in either order.
+export async function runAgentStream(
+  question: string,
+  threadId: string | undefined,
+  handlers: AgentStreamHandlers,
+  signal?: AbortSignal,
+): Promise<void> {
+  await postSseStream(
+    "/agent/stream",
+    { question, thread_id: threadId },
+    (ev) => {
+      if (ev.type === "token") handlers.onToken?.(String(ev.v ?? ""));
+      else if (ev.type === "tools") handlers.onTools?.((ev.v as string[]) ?? []);
+      else if (ev.type === "citations") handlers.onCitations?.((ev.v as Citation[]) ?? []);
+      else if (ev.type === "node") {
+        const v = ev.v as NodeEvent | undefined;
+        if (v?.name && v.status) handlers.onNode?.(v);
+      } else if (ev.type === "retrieval") {
+        const v = ev.v as RetrievalTrace | undefined;
+        if (v) handlers.onRetrieval?.(v);
+      } else if (ev.type === "done")
+        handlers.onDone?.({
+          thread_id: ev.thread_id ?? "",
+          tools_used: ev.tools_used ?? [],
+        });
+    },
+    signal,
+  );
+}
+
+// ── S2.5 migration workbench (mirror ai/app/migrate.py) ─────────────────────
+
+// One reported change in the rewrite; `citations` are [n] markers into the
+// citations list the same stream delivered.
+export type Change = {
+  description: string;
+  citations: number[];
+  citation_slugs?: string[];
+};
+
+// A caveat is a plain sentence (deterministic, backend-built). On the flag
+// path it names the unevidenced symbol — it IS the product on that path.
+export type Caveat = string;
+
+// The `result` event of /migrate/stream: `diff` is a server-side unified diff
+// (stdlib difflib), empty when nothing changed; `rewritten` === `original` on
+// the clean and flag paths.
+export type MigrationResult = {
+  original: string;
+  rewritten: string;
+  changes: Change[];
+  caveats: Caveat[];
+  diff: string;
+};
+
+export type MigrateStreamHandlers = {
+  onToken?: (delta: string) => void; // deterministic summary (or an input error)
+  onCitations?: (citations: Citation[]) => void;
+  onNode?: (node: NodeEvent) => void;
+  onRetrieval?: (trace: RetrievalTrace) => void;
+  onResult?: (result: MigrationResult) => void;
+  onDone?: () => void;
+};
+
+// Streaming client for POST /migrate/stream. Same event vocabulary as the
+// agent stream (node | retrieval | token | citations | done) plus one
+// `result` event carrying the diff — dispatched over the same shared reader.
+export async function runMigrateStream(
+  code: string,
+  handlers: MigrateStreamHandlers,
+  signal?: AbortSignal,
+): Promise<void> {
+  await postSseStream(
+    "/migrate/stream",
+    { code },
+    (ev) => {
+      if (ev.type === "token") handlers.onToken?.(String(ev.v ?? ""));
+      else if (ev.type === "citations") handlers.onCitations?.((ev.v as Citation[]) ?? []);
+      else if (ev.type === "node") {
+        const v = ev.v as NodeEvent | undefined;
+        if (v?.name && v.status) handlers.onNode?.(v);
+      } else if (ev.type === "retrieval") {
+        const v = ev.v as RetrievalTrace | undefined;
+        if (v) handlers.onRetrieval?.(v);
+      } else if (ev.type === "result") {
+        const v = ev.v as MigrationResult | undefined;
+        if (v) handlers.onResult?.(v);
+      } else if (ev.type === "done") handlers.onDone?.();
+    },
+    signal,
+  );
 }
