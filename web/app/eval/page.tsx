@@ -4,6 +4,9 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import {
   HEADLINE,
   META,
+  MIGRATION_COLS,
+  MIGRATION_NOTE,
+  MIGRATION_ROWS,
   MIXED_CORPUS_NOTE,
   RAGAS,
   RETRIEVAL_COLS,
@@ -104,6 +107,45 @@ export default function EvalPage() {
         {MIXED_CORPUS_NOTE}
       </p>
 
+      {/* Migration workbench */}
+      <h2 className="mt-10 text-lg font-semibold">Migration workbench — graph vs raw LLM</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Same 20 legacy snippets (10 modernize / 6 flag / 4 already clean), same scoring
+        code path — a bare gpt-4o-mini vs the detect → research → rewrite → verify
+        graph over the pinned docs.
+      </p>
+      <div className="mt-4 overflow-x-auto rounded-2xl border bg-card shadow-sm">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b text-left text-[12px] text-muted-foreground">
+              {MIGRATION_COLS.map((c) => (
+                <th key={c} className="px-3 py-2.5 font-medium first:pl-4">
+                  {c}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {MIGRATION_ROWS.map((r) => (
+              <tr key={r.metric} className="border-b last:border-0">
+                <td className="px-3 py-2.5 pl-4 font-mono text-[12.5px] font-medium">
+                  {r.metric}
+                </td>
+                <td className="px-3 py-2.5 tabular-nums text-muted-foreground">
+                  {r.baseline}
+                </td>
+                <td className="px-3 py-2.5 font-semibold tabular-nums text-foreground">
+                  {r.agent}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+        {MIGRATION_NOTE}
+      </p>
+
       {/* Ragas */}
       <h2 className="mt-10 text-lg font-semibold">Generation — Ragas (real library)</h2>
       <p className="mt-1 text-sm text-muted-foreground">
@@ -122,6 +164,14 @@ export default function EvalPage() {
         Reproduce:{" "}
         <code className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[11px]">
           python -m scripts.run_eval --judge
+        </code>{" "}
+        ·{" "}
+        <code className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[11px]">
+          python -m scripts.run_mixed_eval
+        </code>{" "}
+        ·{" "}
+        <code className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[11px]">
+          python -m scripts.run_migration_eval --mode {"{baseline,agent}"}
         </code>{" "}
         · methodology in the repo&apos;s{" "}
         <span className="font-mono">ai/eval/README.md</span>.

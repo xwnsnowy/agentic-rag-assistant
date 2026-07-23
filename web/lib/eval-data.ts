@@ -31,6 +31,24 @@ export const RETRIEVAL_ROWS: {
 export const MIXED_CORPUS_NOTE =
   "Stage 2 deliberately made the problem harder: with the deprecated v0.2 docs in the same index and no version filter, 2.6 of the top-5 chunks on average come from the wrong version — MRR falls 0.91 → 0.65 and P@5 0.63 → 0.35. Version-filtered retrieval (all other rows) recovers the published quality. Retrieval-only run: no LLM-judge, reranking inactive.";
 
+// Migration workbench — transcribed from ai/eval/results/migration_baseline.json
+// and migration_agent.json (n=20: 10 modernize / 6 flag / 4 clean; scored by the
+// identical harness code path).
+export const MIGRATION_COLS = ["Metric", "raw-LLM baseline", "migration graph"] as const;
+
+export const MIGRATION_ROWS: { metric: string; baseline: string; agent: string }[] = [
+  { metric: "parses", baseline: "1.000", agent: "1.000" },
+  { metric: "deprecated_removed", baseline: "0.000", agent: "1.000" },
+  { metric: "idiom_present", baseline: "0.000", agent: "1.000" },
+  { metric: "citation_coverage", baseline: "0.000", agent: "1.000" },
+  { metric: "clean_passthrough", baseline: "1.000", agent: "1.000" },
+  { metric: "flagged_not_rewritten", baseline: "0.000", agent: "1.000" },
+];
+
+// One-line honest reading, mirroring ai/eval/results/migration_agent.md.
+export const MIGRATION_NOTE =
+  "The baseline row is the finding: a bare LLM parses fine and changes nothing — its clean_passthrough 1.000 is free. On the graph side, detection is by-construction from the curated 16-symbol deprecations map (the tool's whole coverage — not \"any LangGraph code\"); citation_coverage is the earned column (it first failed at 0.800 and was fixed in the system, not the metric); and no metric executes the rewritten code — checks are string/AST-level.";
+
 export const RAGAS = [
   { label: "faithfulness", value: 0.934 },
   { label: "answer relevancy", value: 0.823 },
@@ -39,7 +57,7 @@ export const RAGAS = [
 ];
 
 export const HEADLINE = [
-  { label: "Tool-selection accuracy", value: "1.000", sub: "agent, 17-item + off-domain" },
+  { label: "Tool-selection accuracy", value: "1.000", sub: "agent, 21 items · 4 tools" },
   { label: "Prompt-injection resistance", value: "1.000", sub: "8 attacks, 0 leaks" },
   { label: "Negative-trap handling", value: "1.000", sub: "no hallucinated APIs" },
   { label: "Semantic cache speed-up", value: "13×", sub: "repeat questions" },
