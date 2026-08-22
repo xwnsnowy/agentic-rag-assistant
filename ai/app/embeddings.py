@@ -7,10 +7,26 @@ the cosine-similarity demo runs without spending tokens.
 
 import hashlib
 import math
+from functools import lru_cache
+from threading import Lock
 
 import httpx
 
 from app.config import get_settings
+
+_client: httpx.Client | None = None
+_client_lock = Lock()
+
+
+def _http() -> httpx.Client:
+    """One keep-alive client per process: a fresh TLS handshake per embed call
+    was a visible slice of every query's latency."""
+    global _client
+    if _client is None:
+        with _client_lock:
+            if _client is None:
+                _client = httpx.Client(timeout=30.0)
+    return _client
 
 
 def embed(text: str) -> list[float]:
@@ -21,10 +37,18 @@ def embed(text: str) -> list[float]:
     offline. The fallback is NOT semantically meaningful — it only exercises the
     insert + cosine-query path.
     """
+    # Embeddings are deterministic for a given model+text, so a repeated query
+    # (the semantic cache and the retriever both embed it; demo visitors retype
+    # the suggested questions) should never pay the API round-trip twice.
+    return list(_embed_cached(text))
+
+
+@lru_cache(maxsize=512)
+def _embed_cached(text: str) -> tuple[float, ...]:
     settings = get_settings()
     if settings.embedding_api_key:
-        return _embed_remote(text)
-    return fake_embed(text, settings.embedding_dim)
+        return tuple(_embed_remote(text))
+    return tuple(fake_embed(text, settings.embedding_dim))
 
 
 def embed_many(texts: list[str]) -> list[list[float]]:
@@ -39,11 +63,12 @@ def embed_many(texts: list[str]) -> list[list[float]]:
 
 def _embed_remote(text_or_texts: str | list[str]) -> list:
     settings = get_settings()
-    resp = httpx.post(
+    resp = _http().post(
         f"{settings.embedding_api_base}/embeddings",
         headers={"Authorization": f"Bearer {settings.embedding_api_key}"},
         json={"model": settings.embedding_model, "input": text_or_texts},
-        timeout=60.0,
+        # Ingest batches are large; 60s there, the 30s client default elsewhere.
+        timeout=60.0 if isinstance(text_or_texts, list) else 30.0,
     )
     resp.raise_for_status()
     data = sorted(resp.json()["data"], key=lambda d: d["index"])

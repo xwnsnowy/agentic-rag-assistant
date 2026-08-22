@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from app.generation import Answer, generate
 from app.query_rewrite import rewrite_query
 from app.rerank import rerank
-from app.retrieval import Result, keyword_search, rrf_fuse, vector_search
+from app.retrieval import Result, keyword_search, rrf_fuse, search_both, vector_search
 
 
 @dataclass
@@ -112,8 +112,13 @@ def retrieve_with_trace(query: str, cfg: RagConfig) -> tuple[list[Result], Retri
         # the full PRE-truncation fused pool (hybrid_search cuts it to k and
         # the discarded tail would be unrecoverable).
         pool = rrf_fuse(
-            vector_search(query, cfg.pool, version=cfg.version),
-            keyword_search(query, cfg.pool, version=cfg.version),
+            *search_both(
+                query,
+                cfg.pool,
+                version=cfg.version,
+                vector=vector_search,
+                keyword=keyword_search,
+            )
         )
     retrieve_ms = (time.perf_counter() - t0) * 1000.0
 

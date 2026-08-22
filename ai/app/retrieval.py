@@ -12,7 +12,9 @@ the standard baseline for hybrid search.
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+from typing import Callable
 
 from app.db import get_connection, vector_literal
 from app.embeddings import embed
@@ -140,13 +142,34 @@ def rrf_fuse(vec: list[Result], kw: list[Result], *, rrf_k: int = 60) -> list[Re
     return sorted(merged.values(), key=lambda r: r.rrf_score or 0.0, reverse=True)
 
 
+def search_both(
+    query: str,
+    pool: int,
+    *,
+    version: str | None = None,
+    vector: Callable[..., list[Result]] | None = None,
+    keyword: Callable[..., list[Result]] | None = None,
+) -> tuple[list[Result], list[Result]]:
+    """Run vector and keyword search concurrently and return (vec, kw).
+
+    The two legs are independent and each is dominated by waiting on the
+    network (the embeddings API, then Neon), so overlapping them costs nothing
+    and the keyword leg finishes entirely inside the embed call's shadow.
+    `vector`/`keyword` let a caller substitute its own bound names (the
+    pipeline's tests patch those, not this module's).
+    """
+    vector = vector or vector_search
+    keyword = keyword or keyword_search
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        vec_f = ex.submit(vector, query, pool, version=version)
+        kw_f = ex.submit(keyword, query, pool, version=version)
+        return vec_f.result(), kw_f.result()
+
+
 def hybrid_search(
     query: str, k: int = 5, *, pool: int = 20, rrf_k: int = 60, version: str | None = None
 ) -> list[Result]:
     """Hybrid retrieval: pull `pool` candidates from each of vector + keyword
     search, fuse the two rankings with RRF (see rrf_fuse), return the top-k."""
-    return rrf_fuse(
-        vector_search(query, pool, version=version),
-        keyword_search(query, pool, version=version),
-        rrf_k=rrf_k,
-    )[:k]
+    vec, kw = search_both(query, pool, version=version)
+    return rrf_fuse(vec, kw, rrf_k=rrf_k)[:k]
