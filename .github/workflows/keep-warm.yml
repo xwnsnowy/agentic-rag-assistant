@@ -12,4 +12,4 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - run: curl -fsS --max-time 90 https://agentic-rag-ai-fspt.onrender.com/db/health || true
+      - run: curl -fsS --max-time 90 https://agentic-rag-ai-hosn.onrender.com/db/health || true
