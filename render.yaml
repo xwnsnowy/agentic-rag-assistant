@@ -7,6 +7,11 @@ services:
     runtime: python
     rootDir: ai
     plan: free
+    # Keep the API in the same region as the Neon project (ap-southeast-1):
+    # every retrieval does an embed call plus two Postgres round-trips, and
+    # Oregon<->Singapore adds ~180ms to each of them. Render pins the region
+    # at service creation, so this only takes effect on a fresh service.
+    region: singapore
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
