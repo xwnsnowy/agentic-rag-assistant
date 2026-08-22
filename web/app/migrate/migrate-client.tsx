@@ -12,7 +12,6 @@ import {
   Square,
 } from "lucide-react";
 import {
-  API_URL,
   runMigrateStream,
   type Citation,
   type MigrationResult,

@@ -16,7 +16,6 @@ import {
   Square,
 } from "lucide-react";
 import {
-  API_URL,
   ask,
   runAgentStream,
   type Citation,
