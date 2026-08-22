@@ -128,11 +128,6 @@ export default function MigrateClient() {
   const slowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  // Pre-warm the API like /chat does (Render free tier cold starts).
-  useEffect(() => {
-    fetch(`${API_URL}/health`, { cache: "no-store" }).catch(() => {});
-  }, []);
-
   useEffect(() => {
     if (loading) {
       slowTimer.current = setTimeout(() => setSlow(true), 4500);

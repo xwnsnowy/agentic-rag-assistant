@@ -75,12 +75,6 @@ export default function ChatApp() {
   // In-flight agent stream — "New chat" and the stop button abort through it.
   const abortRef = useRef<AbortController | null>(null);
 
-  // Pre-warm the API on load so the first question isn't stuck behind a ~40s
-  // cold start (Render free tier spins down when idle).
-  useEffect(() => {
-    fetch(`${API_URL}/health`, { cache: "no-store" }).catch(() => {});
-  }, []);
-
   // After a few seconds of waiting, hint that the free-tier server may be waking up.
   useEffect(() => {
     if (loading) {
