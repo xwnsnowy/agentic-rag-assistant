@@ -3,9 +3,14 @@ name: Keep warm
 # Render's free tier spins the API down after ~15 min idle (first request then
 # takes ~60s) and Neon suspends its compute after ~5 min idle (first query then
 # takes several seconds). Hit /db/health — not /health — so one ping wakes both.
+#
+# Caveat: GitHub schedules are best-effort and routinely drift 10-30 min under
+# load, so a */10 cron still let the dyno fall asleep between pings. */5 is the
+# floor GitHub allows and shrinks the gap; a dedicated pinger (cron-job.org /
+# UptimeRobot, both free, on time) is the real fix if cold starts persist.
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:

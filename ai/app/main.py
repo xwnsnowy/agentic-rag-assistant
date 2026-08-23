@@ -15,15 +15,19 @@ Run locally:  uvicorn app.main:app --reload --port 8000
 
 import json
 import logging
+import threading
+import time
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from app.agent import astream_agent, run_agent
+from app.agent import _graph, astream_agent, run_agent
 from app.config import get_settings
 from app.db import ping
+from app.embeddings import embed
 from app.migrate import astream_migrate, run_migrate
 from app.pipeline import CONFIGS, HYBRID_RERANK, answer_question
 
@@ -31,7 +35,40 @@ settings = get_settings()
 _CONFIG_BY_NAME = {c.name: c for c in CONFIGS}
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Agentic RAG — AI Service", version="0.0.1")
+def _warm_up() -> None:
+    """Pay the process's one-time costs now, not on the first visitor's question.
+
+    Measured locally (2026-08): the first agent turn in a fresh process took
+    13s vs 4.6s once warm. The gap is NOT the agent loop — it is lazy set-up:
+    ~4s building the LangGraph graph (LangChain imports + the OpenRouter
+    client), ~1.3s opening the TLS session to the embedding API, ~2s for the
+    first Neon query (pool + TLS + compute wake). On Render's free tier every
+    cold start re-pays all of it, so we do it here, in a daemon thread, right
+    after boot: /health stays instant for Render's own readiness probe, and
+    any failure is logged and ignored — warm-up must never take the service down.
+    The embed call is one tiny paid request per process start (fractions of a
+    cent) and is memoised, so repeated boots of a long-lived process cost nothing.
+    """
+    # uvicorn's own logger: the app's loggers are unconfigured (INFO dropped),
+    # and this is the channel that reaches the Render log stream.
+    log = logging.getLogger("uvicorn.error")
+    steps = (("graph", _graph), ("db", ping), ("embed", lambda: embed("warm-up")))
+    for name, fn in steps:
+        t = time.perf_counter()
+        try:
+            fn()
+            log.info("warm-up %s ok in %.0fms", name, (time.perf_counter() - t) * 1000)
+        except Exception:  # noqa: BLE001
+            log.exception("warm-up %s failed (ignored)", name)
+
+
+@asynccontextmanager
+async def _lifespan(_: FastAPI):
+    threading.Thread(target=_warm_up, name="warm-up", daemon=True).start()
+    yield
+
+
+app = FastAPI(title="Agentic RAG — AI Service", version="0.0.1", lifespan=_lifespan)
 
 # CORS so the Next.js frontend can call this service from the browser.
 app.add_middleware(
